@@ -1,0 +1,12 @@
+[package]
+name = "compile_time_ls_colours"
+version = "0.1.0"
+edition = "2024"
+
+[build-dependencies]
+ansic = "0.1.7"
+
+
+[dependencies]
+phf = { version = "0.12.1", features = ["macros", "phf_macros"] }
+
