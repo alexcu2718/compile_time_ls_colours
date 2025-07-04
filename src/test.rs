@@ -1,10 +1,15 @@
+
+
 #[cfg(test)]
 mod tests {
     use crate::LS_COLOURS_HASHMAP;
+    use std::io::{self, BufWriter,Write};
    
 
     #[test]
     fn test_common_extensions() {
+        let mut writer=BufWriter::new(io::stdout());
+    
         let test_extensions = [
             "rs", "py", "txt", "jpg", "mp3", "zip", 
             "gz", "html", "css", "js", "json", "md",
@@ -14,6 +19,8 @@ mod tests {
         println!("Testing common extensions:");
         for ext in test_extensions {
             if let Some(escape_seq) = LS_COLOURS_HASHMAP.get(ext.as_bytes()) {
+                writer.write(escape_seq).unwrap();
+                writer.flush().unwrap();
                 print!("\x1b[0m.{}", String::from_utf8_lossy(escape_seq));
                 print!("{}", ext);
                 print!("\x1b[0m ");
@@ -22,6 +29,8 @@ mod tests {
             }
         }
         println!("\n");
+
+
     }
 
     #[test]
@@ -48,7 +57,7 @@ mod tests {
                     println!("\x1b[0m");
                 },
                 None => {
-                    println!("Case '{}' has no color mapping", case);
+                    println!("Case '{}' has no colour mapping", case);
                 }
             }
         }
@@ -98,7 +107,7 @@ mod tests {
         
         println!("\n{:-^40}", " LEGEND ");
         println!("Regular text: No color mapping");
-        println!("Colored text: Has color mapping");
+        println!("Coloured text: Has color mapping");
     }
 
    
