@@ -17,11 +17,11 @@ macro_rules! ansi_bytes {
     };
 }
 
-const COLOUR_RS: &[u8] = ansi_bytes!(rgb(200, 60, 0));
+const COLOUR_RS: &[u8] = ansi_bytes!(rgb(130, 200, 0));
 const COLOUR_PY: &[u8] = ansi_bytes!(rgb(0, 200, 200));
 const COLOUR_CPP: &[u8] = ansi_bytes!(rgb(0, 100, 200));
 const COLOUR_H: &[u8] = ansi_bytes!(rgb(80, 160, 220));
-const COLOUR_C: &[u8] = ansi_bytes!(rgb(255, 255, 224));
+const COLOUR_C: &[u8] = ansi_bytes!(rgb(150, 131, 38));
 const COLOUR_LUA: &[u8] = ansi_bytes!(rgb(0, 0, 255));
 const COLOUR_HTML: &[u8] = ansi_bytes!(rgb(255, 105, 180));
 const COLOUR_CSS: &[u8] = ansi_bytes!(rgb(150, 200, 50));
