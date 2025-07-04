@@ -63,8 +63,12 @@ const COLOUR_CHARACTER_DEVICE_DEFAULT: &[u8] = ansi_bytes!(green bold);
 const COLOUR_EXECUTABLE_DEFAULT: &[u8] = ansi_bytes!(green bold);
 
 fn main() {
-    let ls_colors = env::var("LS_COLORS").unwrap_or_default();
-    let mut color_map = parse_ls_colors(&ls_colors);
+    let custom_colours = env::var("CUSTOM_LS_COLORS");
+    let ls_colors = match custom_colours {
+        Ok(use_this) => use_this,
+        Err(_) => env::var("LS_COLORS").unwrap_or_default(),
+    };
+    let mut color_map = parse_ls_colours(&ls_colors);
 
     // Add fallback colors for common extensions
     add_new_colours(&mut color_map);
@@ -102,25 +106,35 @@ fn main() {
     )
     .unwrap();
 
+    // Define a closure to escape special characters in the ANSI escape sequences
+    //also to simplif the code, since performance doesnt matter here.
+    let lambda_escape_string = |s: &Vec<u8>| {
+        String::from_utf8_lossy(s)
+            .replace('\\', "\\\\")
+            .replace('\"', "\\\"")
+    };
+
     for (key, escape_seq) in color_map {
         // Convert the escape sequence to bytes and escape special characters
-        let escaped_seq = String::from_utf8_lossy(&escape_seq)
-            .replace('\\', "\\\\")
-            .replace('\"', "\\\"");
+        let escaped_seq = lambda_escape_string(&escape_seq);
+        // Write the key-value pair to the file
         writeln!(f, "    b\"{}\" => b\"{}\",", key, escaped_seq).unwrap();
     }
 
     writeln!(f, "}};").unwrap();
 }
 
-fn format_ansi_sequence(code: &str) -> Vec<u8> {
-    format!("\x1b[{}m", code).into_bytes()
-}
+fn parse_ls_colours(ls_colours: &str) -> HashMap<String, Vec<u8>> {
+    // Helper function to format ANSI escape sequences
+    let format_ansi_sequence = |code: &str| -> Vec<u8> { format!("\x1b[{}m", code).into_bytes() };
 
-fn parse_ls_colors(ls_colors: &str) -> HashMap<String, Vec<u8>> {
+    let insert_color = |map: &mut HashMap<String, Vec<u8>>, key: &str, value: &str| {
+        map.insert(key.to_string(), format_ansi_sequence(value));
+    };
+
     let mut color_map = HashMap::new();
 
-    for entry in ls_colors.split(':') {
+    for entry in ls_colours.split(':') {
         // Skip empty entries
         if entry.is_empty() {
             continue;
@@ -136,40 +150,40 @@ fn parse_ls_colors(ls_colors: &str) -> HashMap<String, Vec<u8>> {
 
         // Handle directory entry
         if key == "di" {
-            color_map.insert("directory".to_string(), format_ansi_sequence(value));
+            insert_color(&mut color_map, "directory", value);
             continue;
         }
 
         // Handle symlink entry
         if key == "ln" {
-            color_map.insert("symlink".to_string(), format_ansi_sequence(value));
+            insert_color(&mut color_map, "symlnk", value);
             continue;
         }
         if key == "so" {
-            color_map.insert("socket".to_string(), format_ansi_sequence(value));
+            insert_color(&mut color_map, "socket", value);
             continue;
         }
         if key == "pi" {
-            color_map.insert("pipe".to_string(), format_ansi_sequence(value));
+            insert_color(&mut color_map, "pipe", value);
             continue;
         }
         if key == "bd" {
-            color_map.insert("block_device".to_string(), format_ansi_sequence(value));
+            insert_color(&mut color_map, "block_device", value);
             continue;
         }
         if key == "cd" {
-            color_map.insert("character_device".to_string(), format_ansi_sequence(value));
+            insert_color(&mut color_map, "character_device", value);
             continue;
         }
         if key == "ex" {
-            color_map.insert("executable".to_string(), format_ansi_sequence(value));
+            insert_color(&mut color_map, "executable", value);
             continue;
         }
 
         // Handle file extensions (e.g., *.rs)
         if key.starts_with("*.") {
             let extension = key[2..].to_string();
-            color_map.insert(extension, format_ansi_sequence(value));
+            insert_color(&mut color_map, &extension, value);
         }
     }
 
@@ -301,7 +315,12 @@ fn add_defaults(map: &mut HashMap<String, Vec<u8>>) {
     ];
 
     for (key, colour) in specials {
-        map.entry(key.to_string())
-            .or_insert_with(|| colour.to_vec());
+        if !map.contains_key(key) {
+            // Only insert if the key does not already exist
+            // This prevents overwriting existing colours
+            // for the same key.
+            map.entry(key.to_string())
+                .or_insert_with(|| colour.to_vec());
+        }
     }
 }

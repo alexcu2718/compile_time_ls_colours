@@ -71,29 +71,29 @@ macro_rules! file_type_colour {
     // It uses the LS_COLORS_HASHMAP to get the colour for the file type
     //we can use unwrap_unchecked because we know that the file type is valid (at compile time)
     // and we have a default colour for it, so we can safely unwrap it
-    (symlink) => { // 
-        unsafe{$crate::colour_path(b"symlink").unwrap_unchecked()} 
+    (symlink) => { //
+        unsafe{$crate::colour_path(b"symlink").unwrap_unchecked()}
     };
-    (directory) => { // 
-        unsafe{$crate::colour_path(b"directory").unwrap_unchecked()}  
+    (directory) => { //
+        unsafe{$crate::colour_path(b"directory").unwrap_unchecked()}
     };
-    (executable) => { 
+    (executable) => {
        unsafe{$crate::colour_path(b"executable").unwrap_unchecked()}//same as above
     };
-    (socket) => { 
+    (socket) => {
        unsafe{$crate::colour_path(b"socket").unwrap_unchecked()}//etc
     };
-    (pipe) => { 
+    (pipe) => {
           unsafe{$crate::colour_path(b"pipe").unwrap_unchecked()}
     };
-    (block_device) => { 
+    (block_device) => {
            unsafe{$crate::colour_path(b"block_device").unwrap_unchecked()}
     };
-    (character_device) => { 
+    (character_device) => {
           unsafe{$crate::colour_path(b"character_device").unwrap_unchecked()}
     };
 
-    ($other:ident) => { 
+    ($other:ident) => {
         $crate::colour_path_or_alternative($other, $crate::NO_COLOUR) // for any other file type, use the colour from the LS_COLORS map
     };
 }

@@ -145,7 +145,7 @@ mod tests {
                 let coloured_example = format!(
                     "{}{}{}",
                     colour_code_str, // The actual colour code from the hashmap
-                    "THIS TEXT IS COLOuRED",
+                    "THIS TEXT IS COLOURED",
                     "\x1b[0m" // Reset colour to default
                 );
 
