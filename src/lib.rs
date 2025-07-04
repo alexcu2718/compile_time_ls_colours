@@ -5,19 +5,6 @@ mod test;
 
 
 pub const NO_COLOUR: &[u8] = b"\x1b[0m"; // Reset colour code
-// Default colour code for symbolic links.
-pub const DEFAULT_SYMLINK_COLOUR: &[u8] = b"\x1b[38;5;153m";
-
-// Default colour code for directories.
-pub const DEFAULT_DIR_COLOUR: &[u8] = b"\x1b[38;2;30;144;255m";
-
-
-// Default colours if LS_COLORS is not set
-pub const DEFAULT_SOCKET_COLOUR: &[u8] = b"\x1b[01;35m";      // "so" => socket
-pub const DEFAULT_PIPE_COLOUR: &[u8] = b"\x1b[40;33m";        // "pi" => pipe
-pub const DEFAULT_EXECUTABLE_COLOUR: &[u8] = b"\x1b[01;32m";  // "ex" => executable
-pub const DEFAULT_BLOCK_DEVICE_COLOUR: &[u8] = b"\x1b[40;33;01m"; // "bd" => block device
-pub const DEFAULT_CHAR_DEVICE_COLOUR: &[u8] = b"\x1b[40;33;01m";  // "cd" => char device
 
 
 /// Returns the colour code for a given file extension.
@@ -43,6 +30,17 @@ pub fn colour_path<'a>(extension:&'a [u8])->Option<&'static[u8]>{
 #[inline]
 pub fn colour_path_or_reset<'a>(extension: &'a  [u8]) -> &'a [u8] {
     LS_COLOURS_HASHMAP.get(extension).map(|v| &**v).unwrap_or_else(|| NO_COLOUR)
+}
+
+
+///you shouldnt use this, unfortunately there's limitations because i dont want to make the macro unsafe,
+/// because it would panic at compile time if the extension is not found.
+/// DO NOT USE THIS EVER THIS IS INTERNAL FOR MACRO IMPLEMENTATION
+#[inline]
+pub  fn colour_path_unchecked<'a>(extension: &'a [u8]) -> &'a [u8] {
+    // This function is unsafe because it assumes the extension exists in the LS_COLORS_HASHMAP.
+    // Use with caution, as it will panic if the extension is not found.
+    unsafe { LS_COLOURS_HASHMAP.get(extension).unwrap_unchecked() }
 }
 
 
@@ -78,26 +76,27 @@ pub fn colour_path_or_reset<'a>(extension: &'a  [u8]) -> &'a [u8] {
 #[macro_export]
 macro_rules! file_type_colour {
     
+    
     (symlink) => { // if it's a symlink, use the default symlink colour
-        unsafe {$crate::colour_path(b"symlink").unwrap_unchecked()} //we know it's safe because we have a default colour for symlinks
+        $crate::colour_path_unchecked(b"symlink") //we know it's safe because we have a default colour for symlinks
     };
     (directory) => { // if it's a directory, use the default directory colour
-        unsafe{$crate::colour_path(b"directory").unwrap_unchecked()} //we know it's safe because we have a default colour for directories
+        $crate::colour_path_unchecked(b"directory")  //we know it's safe because we have a default colour for directories
     };
-    (executable) => { // for executables, use the colour from the LS_COLORS map or NO_COLOUR
-       unsafe{$crate::colour_path_or_alternative(b"executable").unwrap_unchecked()} //same as above
+    (executable) => { // for executables, use the colour from the LS_COLORS map 
+       $crate::colour_path_unchecked(b"executable") //same as above
     };
-    (socket) => { // for sockets, use the colour from the LS_COLORS map or NO_COLOUR
-        unsafe{$crate::colour_path_or_alternative(b"socket").unwrap_unchecked()}//etc
+    (socket) => { // for sockets, use the colour from the LS_COLORS map 
+       $crate::colour_path_unchecked(b"socket") //etc
     };
-    (pipe) => { // for pipes, use the colour from the LS_COLORS map or NO_COLOUR
-          unsafe{$crate::colour_path_or_alternative(b"pipe").unwrap_unchecked()}
+    (pipe) => { // for pipes, use the colour from the LS_COLORS map 
+          $crate::colour_path_unchecked(b"pipe") //et
     };
-    (block_device) => { // for block devices, use the colour from the LS_COLORS map or NO_COLOUR
-        unsafe{$crate::colour_path_or_alternative(b"block_device").unwrap_unchecked()}
+    (block_device) => { // for block devices, use the colour from the LS_COLORS map 
+           $crate::colour_path_unchecked(b"block_device") //etc
     };
     (character_device) => { // for character devices, use the colour from the LS_COLORS map or NO_COLOUR
-        unsafe{$crate::colour_path_or_alternative(b"character_device").unwrap_unchecked()}
+        $crate::colour_path_unchecked(b"character_device")
     };
 
     ($other:ident) => { // for any other file type, use the colour from the LS_COLORS map or NO_COLOUR
