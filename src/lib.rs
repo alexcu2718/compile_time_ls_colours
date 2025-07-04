@@ -6,7 +6,7 @@ mod test;
 
 pub const NO_COLOUR: &[u8] = b"\x1b[0m"; // Reset colour code
 // Default colour code for symbolic links.
-pub const DEFAULT_SYMLINK_COLOUR: &[u8] = b"\x1b[38;2;230;150;60m";
+pub const DEFAULT_SYMLINK_COLOUR: &[u8] = b"\x1b[38;5;153m";
 
 // Default colour code for directories.
 pub const DEFAULT_DIR_COLOUR: &[u8] = b"\x1b[38;2;30;144;255m";
