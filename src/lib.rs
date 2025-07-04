@@ -68,6 +68,7 @@ pub  fn colour_path_unchecked<'a>(extension: &'a [u8]) -> &'static [u8] {
 /// let ext = b"txt";
 /// let unknown_colour: &'static [u8] = file_type_colour!(ext); // defaults to NO_COLOUR
 /// 
+/// 
 /// let directory_colour: &'static [u8] = file_type_colour!(directory);
 /// let symlink_colour: &'static [u8] = file_type_colour!(symlink);
 /// ```

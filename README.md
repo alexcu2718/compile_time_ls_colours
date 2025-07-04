@@ -23,7 +23,6 @@ The special values for custom colouring are
     pipe,
     block_device,
     character_device,
-
 #Everything else will default to reset/no colour :)
 ```
 
