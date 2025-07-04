@@ -8,6 +8,8 @@ It provides colour coding for file types in terminal applications. Keys are byte
 
 Values are byte slices representing ANSI escape sequences which are generated at build time from the LS_COLORS environment variable.
 
+SIDE COMMENT:EVERYTHING USES COLOR AND NOT COLOUR AND IM BRITISH AND I GET SO ANNOYED BECAUSE I GET LAZY TOO
+
 ## Caveats
 
 This doesn't make any system calls, so we cannot get any information about being an executable,
@@ -96,15 +98,15 @@ macro_rules! file_type_colour {
     
     
     (symlink) => { // if it's a symlink, use the default symlink colour
-        $crate::colour_path_unchecked(b"symlink") //we know it's safe because we have a default colour for symlinks
-    }; //we have to cheat around limitations here, the macro is NOT unsafe, because we know 
+        $crate::colour_path_unchecked(b"symlink")
+    };
     (directory) => { // if it's a directory, use the default directory colour
         $crate::colour_path_unchecked(b"directory")  //we know it's safe because we have a default colour for directories
     };
     (executable) => { // for executables, use the colour from the LS_COLORS map 
        $crate::colour_path_unchecked(b"executable") //same as above
     };
-    (socket) => { // for sockets, use the colour from the LS_COLORS map 
+    (socket) => { // fo
        $crate::colour_path_unchecked(b"socket") //etc
     };
     (pipe) => { // 

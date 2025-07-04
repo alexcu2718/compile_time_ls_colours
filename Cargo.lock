@@ -23,7 +23,7 @@ dependencies = [
 
 [[package]]
 name = "compile_time_ls_colours"
-version = "0.3.3"
+version = "0.3.6"
 dependencies = [
  "ansic",
  "phf",
