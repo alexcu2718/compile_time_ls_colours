@@ -75,6 +75,62 @@ mod tests {
             );
         }
     }
+#[test]
+fn test_dtypes() {
+    use std::io::{self, Write, BufWriter};
+
+    // Check if the LS_COLOURS_HASHMAP contains entries for all expected dtypes
+    println!("Testing dtype presence in LS_COLOURS_HASHMAP:");
+    let mut writer = BufWriter::new(io::stdout());
+    let dtypes = [
+        "symlink", "directory", "socket", "pipe",
+        "block_device", "character_device", "executable"
+    ];
+
+    for dtype in dtypes {
+        assert!(
+            
+            LS_COLOURS_HASHMAP.contains_key(dtype.as_bytes()),
+            "LS_COLOURS_HASHMAP should contain dtype '{}'", dtype
+        );
+    }
+
+    writeln!(writer, "\n--- LS_COLOURS_HASHMAP Contents & Applied Colors ---").unwrap();
+
+    for (key_bytes, value_bytes) in LS_COLOURS_HASHMAP.into_iter() {
+        if let Ok(key_str) = std::str::from_utf8(key_bytes) {
+            // Convert the value bytes (ANSI code) to a string for display purposes.
+            // If it's not valid UTF-8 then something is wrong.
+        
+            let color_code_str = std::str::from_utf8(value_bytes)
+                                 .unwrap_or("<NON-UTF8 ANSI CODE>");
+
+            // --- Applying the color for visual output ---
+            // ANSI escape sequence for reset is "\x1b[0m"
+            let colored_example = format!(
+                "{}{}{}",
+                color_code_str,   // The actual color code from the hashmap
+                "THIS TEXT IS COLORED", 
+                "\x1b[0m"         // Reset color to default
+            );
+
+            writeln!(
+                writer,
+                "Key: {:<20}   | Applied: {}",
+                key_str,
+               // Shows the raw bytes of the ANSI code
+                colored_example // Shows the text rendered with the actual color
+            ).unwrap();
+        } else {
+            unreachable!( // This should never happen as we expect all keys to be valid UTF-8
+                "Key bytes {:?} are not valid UTF-8",
+                key_bytes
+            );
+        }
+    }
+    writeln!(writer, "-----------------------------------").unwrap();
+    writer.flush().unwrap(); // Ensures all buffered output is written immediately
+}
 
 
     #[test]

@@ -55,6 +55,15 @@ const COLOUR_XLS: &[u8] = ansi_bytes!(rgb(64, 128, 64));
 const COLOUR_XLSX: &[u8] = ansi_bytes!(rgb(64, 128, 64));
 const COLOUR_SQL: &[u8] = ansi_bytes!(rgb(100, 100, 100));
 
+
+const COLOUR_SYMLINK_DEFAULT: &[u8] = ansi_bytes!(cyan  bold);
+const COLOUR_DIRECTORY_DEFAULT: &[u8] = ansi_bytes!(blue bold);
+const COLOUR_SOCKET_DEFAULT: &[u8] = ansi_bytes!(magenta bold);
+const COLOUR_PIPE_DEFAULT: &[u8] = ansi_bytes!(yellow bold);
+const COLOUR_BLOCK_DEVICE_DEFAULT: &[u8] = ansi_bytes!(red bold);
+const COLOUR_CHARACTER_DEVICE_DEFAULT: &[u8] = ansi_bytes!(green bold);
+const COLOUR_EXECUTABLE_DEFAULT: &[u8] = ansi_bytes!(green bold);
+
 fn main() {
 
    let ls_colors = env::var("LS_COLORS").unwrap_or_default();
@@ -273,4 +282,16 @@ fn add_defaults(map: &mut HashMap<String, Vec<u8>>) {
 
 
     insert_extensions(map, &backups, &gray);
+    //avoid some boiler plate.
+    let mut mylambda=|ext:&str|{
+        if !map.contains_key(ext) {
+            map.insert(ext.to_string(), COLOUR_SYMLINK_DEFAULT.to_vec());
+        }
+    };
+    mylambda("symlink");
+    mylambda("directory");
+    mylambda("socket");
+    mylambda("pipe");
+    mylambda("block_device");
+    mylambda("character_device");
 }

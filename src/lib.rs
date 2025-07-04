@@ -32,7 +32,7 @@ pub fn colour_path_or_alternative<'a>(extension:&'a [u8],or_alternative:&'a [u8]
 /// Returns the colour code for a given file extension if it exists in the colour map.
 /// Returns `None` if not found.
 #[inline]
-pub fn colour_path(extension:&'static [u8])->Option<&'static[u8]>{
+pub fn colour_path<'a>(extension:&'a [u8])->Option<&'static[u8]>{
     LS_COLOURS_HASHMAP.get(extension).map(|v| &**v)
 }
 
@@ -80,7 +80,7 @@ pub fn colour_path_or_reset<'a>(extension: &'a  [u8]) -> &'a [u8] {
 macro_rules! file_type_colour {
     
     (symlink) => { // if it's a symlink, use the default symlink colour
-        $crate::colour_path_or_alternative(b"symlink", $crate::DEFAULT_SYMLINK_COLOUR)
+        $crate::colour_path(b"symlink").unwrap_unchecked()
     };
     (directory) => { // if it's a directory, use the default directory colour
         $crate::colour_path_or_alternative(b"directory", $crate::DEFAULT_DIR_COLOUR)
