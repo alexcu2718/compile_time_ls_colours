@@ -28,7 +28,7 @@ pub fn colour_path<'a>(extension:&'a [u8])->Option<&'static[u8]>{
 /// This is useful for cases where you want to ensure a reset colour code is used
 /// when the file type is not recognized.
 #[inline]
-pub fn colour_path_or_reset<'a>(extension: &'a  [u8]) -> &'a [u8] {
+pub fn colour_path_or_reset<'a>(extension: &'a  [u8]) -> &'static [u8] {
     LS_COLOURS_HASHMAP.get(extension).map(|v| &**v).unwrap_or_else(|| NO_COLOUR)
 }
 
@@ -37,7 +37,7 @@ pub fn colour_path_or_reset<'a>(extension: &'a  [u8]) -> &'a [u8] {
 /// because it would panic at compile time if the extension is not found.
 /// DO NOT USE THIS EVER THIS IS INTERNAL FOR MACRO IMPLEMENTATION
 #[inline]
-pub  fn colour_path_unchecked<'a>(extension: &'a [u8]) -> &'a [u8] {
+pub  fn colour_path_unchecked<'a>(extension: &'a [u8]) -> &'static [u8] {
     // This function is unsafe because it assumes the extension exists in the LS_COLORS_HASHMAP.
     // Use with caution, as it will panic if the extension is not found.
     unsafe { LS_COLOURS_HASHMAP.get(extension).unwrap_unchecked() }

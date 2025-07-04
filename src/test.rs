@@ -9,7 +9,7 @@ mod tests {
     #[test]
     fn test_common_extensions() {
         let mut writer=BufWriter::new(io::stdout());
-    
+       
         let test_extensions = [
             "rs", "py", "txt", "jpg", "mp3", "zip", 
             "gz", "html", "css", "js", "json", "md",
