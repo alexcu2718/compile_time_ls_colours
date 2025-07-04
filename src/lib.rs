@@ -49,8 +49,7 @@ pub fn colour_path_or_reset<'a>(extension: &'a  [u8]) -> &'a [u8] {
 /// Macro to generate a colour code for a file type based on its name/type.
 ///
 /// It uses the `colour_path_or_alternative` function to retrieve a colour from
-/// the internal LS_COLORS map. If the file type is not recognized, it falls
-/// back to a sensible default such as `NO_COLOR`, `DEFAULT_SYMLINK_COLOUR`, or `DEFAULT_DIR_COLOUR`.
+/// the internal LS_COLORS map. If the file type is not recognized,
 ///
 /// Please note, you cannot use raw string literals arguments with this macro.
 /// 
@@ -80,25 +79,25 @@ pub fn colour_path_or_reset<'a>(extension: &'a  [u8]) -> &'a [u8] {
 macro_rules! file_type_colour {
     
     (symlink) => { // if it's a symlink, use the default symlink colour
-        $crate::colour_path(b"symlink").unwrap_unchecked()
+        unsafe {$crate::colour_path(b"symlink").unwrap_unchecked()} //we know it's safe because we have a default colour for symlinks
     };
     (directory) => { // if it's a directory, use the default directory colour
-        $crate::colour_path_or_alternative(b"directory", $crate::DEFAULT_DIR_COLOUR)
+        unsafe{$crate::colour_path(b"directory").unwrap_unchecked()} //we know it's safe because we have a default colour for directories
     };
     (executable) => { // for executables, use the colour from the LS_COLORS map or NO_COLOUR
-        $crate::colour_path_or_alternative(b"executable", $crate::DEFAULT_EXECUTABLE_COLOUR)
+       unsafe{$crate::colour_path_or_alternative(b"executable").unwrap_unchecked()} //same as above
     };
     (socket) => { // for sockets, use the colour from the LS_COLORS map or NO_COLOUR
-        $crate::colour_path_or_alternative(b"socket", $crate::DEFAULT_SOCKET_COLOUR)
+        unsafe{$crate::colour_path_or_alternative(b"socket").unwrap_unchecked()}//etc
     };
     (pipe) => { // for pipes, use the colour from the LS_COLORS map or NO_COLOUR
-        $crate::colour_path_or_alternative(b"pipe", $crate::DEFAULT_PIPE_COLOUR)
+          unsafe{$crate::colour_path_or_alternative(b"pipe").unwrap_unchecked()}
     };
     (block_device) => { // for block devices, use the colour from the LS_COLORS map or NO_COLOUR
-        $crate::colour_path_or_alternative(b"block_device", $crate::DEFAULT_BLOCK_DEVICE_COLOUR)
+        unsafe{$crate::colour_path_or_alternative(b"block_device").unwrap_unchecked()}
     };
     (character_device) => { // for character devices, use the colour from the LS_COLORS map or NO_COLOUR
-        $crate::colour_path_or_alternative(b"character_device", $crate::DEFAULT_CHAR_DEVICE_COLOUR)
+        unsafe{$crate::colour_path_or_alternative(b"character_device").unwrap_unchecked()}
     };
 
     ($other:ident) => { // for any other file type, use the colour from the LS_COLORS map or NO_COLOUR
