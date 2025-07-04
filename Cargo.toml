@@ -1,6 +1,6 @@
 [package]
 name = "compile_time_ls_colours"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 description = "A compile-time map of LS_COLORS-style extension-to-color mappings"
 license = "MIT"
