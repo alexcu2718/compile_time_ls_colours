@@ -40,8 +40,6 @@ pub fn colour_path_or_reset<'a>(extension: &'a [u8]) -> &'a [u8] {
 /// It uses the `colour_path_or_alternative` function to retrieve a colour from
 /// the internal LS_COLORS map. If the file type is not recognized,
 ///
-/// Please note, you cannot use raw string literals arguments with this macro.
-///
 /// # Usage
 ///
 /// ```rust

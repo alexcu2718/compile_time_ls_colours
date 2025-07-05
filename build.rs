@@ -235,8 +235,7 @@ fn add_new_colours(colour_map: &mut HashMap<String, Vec<u8>>) {
     }
 }
 
-
-//we don't need to worry about dtypes, that's handled by my macro.
+// This function adds default colours for common file extensions and special file types
 //copied from my ls environment variable.
 fn add_defaults(map: &mut HashMap<String, Vec<u8>>) {
     let red = ansi_bytes!(rgb(255, 80, 80)).to_vec(); // compressed
