@@ -1,6 +1,8 @@
 # compile_time_ls_colours
 
-## EXPERIMENTAL COMMIT USING STD HASHMAP
+## EXPERIMENTAL COMMIT USING ONLY STD
+
+(unfortunately this is runtime initialised but has no dependencies! )
 
 The main idea is a compile time hash map (we can't use std hashmap due to complicated reasons)
 

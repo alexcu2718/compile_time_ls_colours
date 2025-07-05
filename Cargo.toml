@@ -1,11 +1,10 @@
 [package]
 name = "compile_time_ls_colours"
-version = "0.4.3"
+version = "0.4.4"
 edition = "2024"
 description = "A compile-time map of LS_COLORS-style extension-to-colour mappings"
 license = "MIT"
 keywords=["filesystem","colors","hashmap","colours"]
 repository = "https://github.com/alexcu2718/compile_time_ls_colours"
-[build-dependencies]
-ansic = "0.1.7"
+
 

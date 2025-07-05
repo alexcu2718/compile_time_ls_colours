@@ -1,8 +1,6 @@
 #![allow(clippy::all)]
 #![allow(warnings)]
 
-use ansic::ansi;
-
 use std::collections::HashMap;
 use std::env;
 use std::fmt::Display;
@@ -11,61 +9,62 @@ use std::io::Write;
 use std::thread;
 
 use std::io::BufWriter;
-macro_rules! ansi_bytes {
-    ($($t:tt)*) => {
-        ansi!($($t)*).as_bytes()
-    };
-}
+const COLOUR_RS: &[u8] = b"\x1b[38;2;130;200;0m";
+const COLOUR_PY: &[u8] = b"\x1b[38;2;0;200;200m";
+const COLOUR_CPP: &[u8] = b"\x1b[38;2;0;100;200m";
+const COLOUR_H: &[u8] = b"\x1b[38;2;80;160;220m";
+const COLOUR_C: &[u8] = b"\x1b[38;2;150;131;38m";
+const COLOUR_LUA: &[u8] = b"\x1b[38;2;0;0;255m";
+const COLOUR_HTML: &[u8] = b"\x1b[38;2;255;105;180m";
+const COLOUR_CSS: &[u8] = b"\x1b[38;2;150;200;50m";
+const COLOUR_JS: &[u8] = b"\x1b[38;2;240;220;80m";
+const COLOUR_JSON: &[u8] = b"\x1b[38;2;160;140;200m";
+const COLOUR_TOML: &[u8] = b"\x1b[38;2;200;120;80m";
+const COLOUR_TXT: &[u8] = b"\x1b[38;2;128;128;128m";
+const COLOUR_MD: &[u8] = b"\x1b[38;2;100;180;100m";
+const COLOUR_INI: &[u8] = b"\x1b[38;2;180;80;80m";
+const COLOUR_CFG: &[u8] = b"\x1b[38;2;180;80;80m";
+const COLOUR_XML: &[u8] = b"\x1b[38;2;130;90;200m";
+const COLOUR_YML: &[u8] = b"\x1b[38;2;130;90;200m";
+const COLOUR_TS: &[u8] = b"\x1b[38;2;90;150;250m";
+const COLOUR_SH: &[u8] = b"\x1b[38;2;100;250;100m";
+const COLOUR_BAT: &[u8] = b"\x1b[38;2;200;200;0m";
+const COLOUR_RB: &[u8] = b"\x1b[38;2;200;0;200m";
+const COLOUR_PHP: &[u8] = b"\x1b[38;2;80;80;200m";
+const COLOUR_PL: &[u8] = b"\x1b[38;2;80;80;200m";
+const COLOUR_R: &[u8] = b"\x1b[38;2;0;180;0m";
+const COLOUR_CS: &[u8] = b"\x1b[38;2;50;50;50m";
+const COLOUR_JAVA: &[u8] = b"\x1b[38;2;150;50;50m";
+const COLOUR_GO: &[u8] = b"\x1b[38;2;0;150;150m";
+const COLOUR_SWIFT: &[u8] = b"\x1b[38;2;250;50;150m";
+const COLOUR_KT: &[u8] = b"\x1b[38;2;50;150;250m";
+const COLOUR_SCSS: &[u8] = b"\x1b[38;2;245;166;35m";
+const COLOUR_LESS: &[u8] = b"\x1b[38;2;245;166;35m";
+const COLOUR_CSV: &[u8] = b"\x1b[38;2;160;160;160m";
+const COLOUR_TSV: &[u8] = b"\x1b[38;2;160;160;160m";
+const COLOUR_XLS: &[u8] = b"\x1b[38;2;64;128;64m";
+const COLOUR_XLSX: &[u8] = b"\x1b[38;2;64;128;64m";
+const COLOUR_SQL: &[u8] = b"\x1b[38;2;100;100;100m";
 
-const COLOUR_RS: &[u8] = ansi_bytes!(rgb(130, 200, 0));
-const COLOUR_PY: &[u8] = ansi_bytes!(rgb(0, 200, 200));
-const COLOUR_CPP: &[u8] = ansi_bytes!(rgb(0, 100, 200));
-const COLOUR_H: &[u8] = ansi_bytes!(rgb(80, 160, 220));
-const COLOUR_C: &[u8] = ansi_bytes!(rgb(150, 131, 38));
-const COLOUR_LUA: &[u8] = ansi_bytes!(rgb(0, 0, 255));
-const COLOUR_HTML: &[u8] = ansi_bytes!(rgb(255, 105, 180));
-const COLOUR_CSS: &[u8] = ansi_bytes!(rgb(150, 200, 50));
-const COLOUR_JS: &[u8] = ansi_bytes!(rgb(240, 220, 80));
-const COLOUR_JSON: &[u8] = ansi_bytes!(rgb(160, 140, 200));
-const COLOUR_TOML: &[u8] = ansi_bytes!(rgb(200, 120, 80));
-const COLOUR_TXT: &[u8] = ansi_bytes!(rgb(128, 128, 128));
-const COLOUR_MD: &[u8] = ansi_bytes!(rgb(100, 180, 100));
-const COLOUR_INI: &[u8] = ansi_bytes!(rgb(180, 80, 80));
-const COLOUR_CFG: &[u8] = ansi_bytes!(rgb(180, 80, 80));
-const COLOUR_XML: &[u8] = ansi_bytes!(rgb(130, 90, 200));
-const COLOUR_YML: &[u8] = ansi_bytes!(rgb(130, 90, 200));
-const COLOUR_TS: &[u8] = ansi_bytes!(rgb(90, 150, 250));
-const COLOUR_SH: &[u8] = ansi_bytes!(rgb(100, 250, 100));
-const COLOUR_BAT: &[u8] = ansi_bytes!(rgb(200, 200, 0));
-const COLOUR_RB: &[u8] = ansi_bytes!(rgb(200, 0, 200));
-const COLOUR_PHP: &[u8] = ansi_bytes!(rgb(80, 80, 200));
-const COLOUR_PL: &[u8] = ansi_bytes!(rgb(80, 80, 200));
-const COLOUR_R: &[u8] = ansi_bytes!(rgb(0, 180, 0));
-const COLOUR_CS: &[u8] = ansi_bytes!(rgb(50, 50, 50));
-const COLOUR_JAVA: &[u8] = ansi_bytes!(rgb(150, 50, 50));
-const COLOUR_GO: &[u8] = ansi_bytes!(rgb(0, 150, 150));
-const COLOUR_SWIFT: &[u8] = ansi_bytes!(rgb(250, 50, 150));
-const COLOUR_KT: &[u8] = ansi_bytes!(rgb(50, 150, 250));
-const COLOUR_SCSS: &[u8] = ansi_bytes!(rgb(245, 166, 35));
-const COLOUR_LESS: &[u8] = ansi_bytes!(rgb(245, 166, 35));
-const COLOUR_CSV: &[u8] = ansi_bytes!(rgb(160, 160, 160));
-const COLOUR_TSV: &[u8] = ansi_bytes!(rgb(160, 160, 160));
-const COLOUR_XLS: &[u8] = ansi_bytes!(rgb(64, 128, 64));
-const COLOUR_XLSX: &[u8] = ansi_bytes!(rgb(64, 128, 64));
-const COLOUR_SQL: &[u8] = ansi_bytes!(rgb(100, 100, 100));
+// File type defaults using standard ANSI attributes
+const COLOUR_SYMLINK_DEFAULT: &[u8] = b"\x1b[1;36m";
+const COLOUR_DIRECTORY_DEFAULT: &[u8] = b"\x1b[1;34m";
+const COLOUR_SOCKET_DEFAULT: &[u8] = b"\x1b[1;35m";
+const COLOUR_PIPE_DEFAULT: &[u8] = b"\x1b[1;33m";
+const COLOUR_BLOCK_DEVICE_DEFAULT: &[u8] = b"\x1b[1;31m";
+const COLOUR_CHARACTER_DEVICE_DEFAULT: &[u8] = b"\x1b[1;32m";
+const COLOUR_EXECUTABLE_DEFAULT: &[u8] = b"\x1b[1;32m";
+const COLOUR_STICKY_DEFAULT: &[u8] = b"\x1b[37;44m";
+const COLOUR_OTHER_WRITABLE_DEFAULT: &[u8] = b"\x1b[34;42m";
+const COLOUR_ORPHAN_SYMLINK_DEFAULT: &[u8] = b"\x1b[1;31m";
+const COLOUR_SETUID_DEFAULT: &[u8] = b"\x1b[37;41m";
+const COLOUR_SETGID_DEFAULT: &[u8] = b"\x1b[37;45m";
 
-const COLOUR_SYMLINK_DEFAULT: &[u8] = ansi_bytes!(cyan  bold); // ln
-const COLOUR_DIRECTORY_DEFAULT: &[u8] = ansi_bytes!(blue bold); //di
-const COLOUR_SOCKET_DEFAULT: &[u8] = ansi_bytes!(magenta bold); //so
-const COLOUR_PIPE_DEFAULT: &[u8] = ansi_bytes!(yellow bold); //pi
-const COLOUR_BLOCK_DEVICE_DEFAULT: &[u8] = ansi_bytes!(red bold); //bd
-const COLOUR_CHARACTER_DEVICE_DEFAULT: &[u8] = ansi_bytes!(green bold); //  cd
-const COLOUR_EXECUTABLE_DEFAULT: &[u8] = ansi_bytes!(green bold); //    ex
-const COLOUR_STICKY_DEFAULT: &[u8] = ansi_bytes!(white   blue);   // st
-const COLOUR_OTHER_WRITABLE_DEFAULT: &[u8]      = ansi_bytes!(blue    green); // ow
-const COLOUR_ORPHAN_SYMLINK_DEFAULT: &[u8]  = ansi_bytes!(red bold); // or
-const COLOUR_SETUID_DEFAULT: &[u8]              = ansi_bytes!(white   red);      // su 
-const COLOUR_SETGID_DEFAULT: &[u8]   = ansi_bytes!(white   magenta); // sg 
+// Misc
+const RED: &[u8] = b"\x1b[38;2;255;80;80m";
+const MAGENTA: &[u8] = b"\x1b[38;2;200;100;200m";
+const CYAN: &[u8] = b"\x1b[38;2;0;200;200m";
+const GREY: &[u8] = b"\x1b[38;2;128;128;128m";
 
 
 fn main() {
@@ -258,10 +257,7 @@ fn add_new_colours(colour_map: &mut HashMap<String, Vec<u8>>) {
 // This function adds default colours for common file extensions and special file types
 //copied from my ls environment variable.
 fn add_defaults(map: &mut HashMap<String, Vec<u8>>) {
-    let red = ansi_bytes!(rgb(255, 80, 80)).to_vec(); // compressed
-    let magenta = ansi_bytes!(rgb(200, 100, 200)).to_vec(); // images/videos
-    let cyan = ansi_bytes!(rgb(0, 200, 200)).to_vec(); // audio
-    let gray = ansi_bytes!(rgb(128, 128, 128)).to_vec(); // backups
+
     // Define a closure to insert extensions with their corresponding colours
     let insert_extensions = |map: &mut HashMap<String, Vec<u8>>, extensions: &[&str], colour: &[u8]| {
     for ext in extensions {
@@ -310,13 +306,13 @@ fn add_defaults(map: &mut HashMap<String, Vec<u8>>) {
         "ucf-old",
     ];
 
-    insert_extensions(map, &compressed, &red);
+    insert_extensions(map, &compressed, &RED.to_vec());
 
-    insert_extensions(map, &media, &magenta);
+    insert_extensions(map, &media, &MAGENTA.to_vec());
 
-    insert_extensions(map, &audio, &cyan);
+    insert_extensions(map, &audio, &CYAN.to_vec());
 
-    insert_extensions(map, &backups, &gray);
+    insert_extensions(map, &backups, &GREY.to_vec());
     let specials = [
         // Special file types with default colours
         ("symlink", COLOUR_SYMLINK_DEFAULT),
