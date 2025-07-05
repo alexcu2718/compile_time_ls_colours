@@ -133,7 +133,7 @@ mod tests {
         )
         .unwrap();
 
-        for (key_bytes, value_bytes) in LS_COLOURS_HASHMAP.into_iter() {
+        for (key_bytes, value_bytes) in LS_COLOURS_HASHMAP.clone().into_iter() {
             if let Ok(key_str) = std::str::from_utf8(key_bytes) {
                 // Convert the value bytes (ANSI code) to a string for display purposes.
                 // If it's not valid UTF-8 then something is wrong.

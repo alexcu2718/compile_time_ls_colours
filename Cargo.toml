@@ -1,6 +1,6 @@
 [package]
 name = "compile_time_ls_colours"
-version = "0.4.2"
+version = "0.4.3"
 edition = "2024"
 description = "A compile-time map of LS_COLORS-style extension-to-colour mappings"
 license = "MIT"
@@ -8,9 +8,4 @@ keywords=["filesystem","colors","hashmap","colours"]
 repository = "https://github.com/alexcu2718/compile_time_ls_colours"
 [build-dependencies]
 ansic = "0.1.7"
-phf_codegen = "0.12.1"
-
-
-[dependencies]
-phf = { version = "0.12.1", features = ["macros", "phf_macros"] }
 

@@ -2,7 +2,7 @@
 #![allow(warnings)]
 
 use ansic::ansi;
-use phf_codegen::Map;
+
 use std::collections::HashMap;
 use std::env;
 use std::fmt::Display;
@@ -80,15 +80,19 @@ fn main() {
     add_new_colours(&mut colour_map);
     add_defaults(&mut colour_map);
 
-    //this is a cargo environment variable that points to the output directory
-    //where the generated file will be placed.
     let out_dir = env::var("OUT_DIR").unwrap();
     let dest_path = std::path::Path::new(&out_dir).join("ls_colours.rs");
     let mut f = File::create(&dest_path).unwrap();
 
-    writeln!(f, "use phf::phf_map;").unwrap();
-    writeln!(f, "/// This is a compile-time hash map of file extensions to their corresponding ANSI colour codes").unwrap();
-    writeln!(f, "/// based on the `LS_COLORS` environment variable.").unwrap();
+    // We will generate a const array of tuples, and then use LazyLock to build the HashMap
+    writeln!(f, "use std::collections::HashMap;").unwrap();
+    writeln!(f, "use std::hash::BuildHasherDefault;").unwrap();
+    writeln!(f, "use std::hash::DefaultHasher;").unwrap();
+    writeln!(f, "use std::sync::LazyLock;").unwrap();
+    writeln!(f, "").unwrap(); // Add a newline for better formatting
+
+    writeln!(f, "/// This is a compile-time generated array of file extensions and their corresponding ANSI colour codes").unwrap();
+    writeln!(f, "/// based on the `LS_COLORS` environment variable and default fallbacks.").unwrap();
     writeln!(f, "///").unwrap();
     writeln!(
         f,
@@ -108,28 +112,44 @@ fn main() {
     .unwrap();
     writeln!(
         f,
-        "pub static LS_COLOURS_HASHMAP: phf::Map<&'static [u8], &'static [u8]> = phf_map! {{"
+        "const LS_COLOURS_DATA: &[(&'static [u8], &'static [u8])] = &["
     )
     .unwrap();
 
     // Define a closure to escape special characters in the ANSI escape sequences
-    //also to simplif the code, since performance doesnt matter here.
     let lambda_escape_string = |s: &Vec<u8>| {
         String::from_utf8_lossy(s)
             .replace('\\', "\\\\")
             .replace('\"', "\\\"")
     };
 
-
-
     for (key, escape_seq) in colour_map {
-        // Convert the escape sequence to bytes and escape special characters
         let escaped_seq = lambda_escape_string(&escape_seq);
-        // Write the key-value pair to the file
-        writeln!(f, "    b\"{}\" => b\"{}\",", key, escaped_seq).unwrap();
+        // Write the key-value pair as a tuple in the const array
+        writeln!(f, "    (b\"{}\", b\"{}\"),", key, escaped_seq).unwrap();
     }
 
-    writeln!(f, "}};").unwrap();
+    writeln!(f, "];").unwrap();
+    writeln!(f, "").unwrap();
+
+    writeln!(f, "/// This is a lazily initialized HashMap of file extensions to their corresponding ANSI colour codes.").unwrap();
+    writeln!(f, "/// It is built once at runtime from the `LS_COLORS_CUSTOM` ").unwrap();
+    writeln!(f, "/// the default (LS_COLOR) is used if the environment variable is not set. This is an optional feature to allow custom colours easily.").unwrap();
+    writeln!(
+        f,
+        "pub static LS_COLOURS_HASHMAP: LazyLock<HashMap<&'static [u8], &'static [u8], BuildHasherDefault<DefaultHasher>>> = LazyLock::new(|| {{"
+    )
+    .unwrap();
+    writeln!(
+        f,
+        "    let mut map = HashMap::with_capacity_and_hasher(LS_COLOURS_DATA.len(), BuildHasherDefault::new());"
+    )
+    .unwrap();
+    writeln!(f, "    for (key, value) in LS_COLOURS_DATA {{").unwrap();
+    writeln!(f, "        map.insert(*key, *value);").unwrap();
+    writeln!(f, "    }}").unwrap();
+    writeln!(f, "    map").unwrap();
+    writeln!(f, "}});").unwrap();
 }
 
 

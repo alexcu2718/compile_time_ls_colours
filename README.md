@@ -1,6 +1,6 @@
 # compile_time_ls_colours
 
-Temporary crate for file extension colour lookups using LS_COLORS format.
+## EXPERIMENTAL COMMIT USING STD HASHMAP
 
 The main idea is a compile time hash map (we can't use std hashmap due to complicated reasons)
 
@@ -56,8 +56,9 @@ let executable_colour: &'static [u8] = file_type_colour!(executable);
 //function definitions below
 
 
-//This is a compile-time hash map of file extensions to their corresponding ANSI color codes based on the LS_COLORS environment variable.
-pub static LS_COLOURS_HASHMAP: Map<&'static [u8], &'static [u8]>
+//This is a static initialised map (god that's a confusing type signature.)
+pub static LS_COLOURS_HASHMAP: LazyLock<HashMap<&'static [u8], &'static [u8], BuildHasherDefault<DefaultHasher>>> = LazyLock { once: Once { inner: Once { state_and_queued: AtomicU32 { v: UnsafeCell { value: 0 } } } }, data: UnsafeCell { value: Data } }
+
 
 
 // Provide the colour byte pattern for the extension and provide an alternative if it doesn't exist.
