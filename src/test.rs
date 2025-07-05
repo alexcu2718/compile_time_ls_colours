@@ -40,7 +40,7 @@ mod tests {
             ("character_device", file_type_colour!(character_device)),
             ("executable", file_type_colour!(executable)),
         ];
-
+        
         println!("Testing special file type colours:");
         for (name, colour_seq) in special_types {
             // verify ANSI escape sequence

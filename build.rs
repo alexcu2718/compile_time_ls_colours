@@ -54,25 +54,31 @@ const COLOUR_XLS: &[u8] = ansi_bytes!(rgb(64, 128, 64));
 const COLOUR_XLSX: &[u8] = ansi_bytes!(rgb(64, 128, 64));
 const COLOUR_SQL: &[u8] = ansi_bytes!(rgb(100, 100, 100));
 
-const COLOUR_SYMLINK_DEFAULT: &[u8] = ansi_bytes!(cyan  bold);
-const COLOUR_DIRECTORY_DEFAULT: &[u8] = ansi_bytes!(blue bold);
-const COLOUR_SOCKET_DEFAULT: &[u8] = ansi_bytes!(magenta bold);
-const COLOUR_PIPE_DEFAULT: &[u8] = ansi_bytes!(yellow bold);
-const COLOUR_BLOCK_DEVICE_DEFAULT: &[u8] = ansi_bytes!(red bold);
-const COLOUR_CHARACTER_DEVICE_DEFAULT: &[u8] = ansi_bytes!(green bold);
-const COLOUR_EXECUTABLE_DEFAULT: &[u8] = ansi_bytes!(green bold);
+const COLOUR_SYMLINK_DEFAULT: &[u8] = ansi_bytes!(cyan  bold); // ln
+const COLOUR_DIRECTORY_DEFAULT: &[u8] = ansi_bytes!(blue bold); //di
+const COLOUR_SOCKET_DEFAULT: &[u8] = ansi_bytes!(magenta bold); //so
+const COLOUR_PIPE_DEFAULT: &[u8] = ansi_bytes!(yellow bold); //pi
+const COLOUR_BLOCK_DEVICE_DEFAULT: &[u8] = ansi_bytes!(red bold); //bd
+const COLOUR_CHARACTER_DEVICE_DEFAULT: &[u8] = ansi_bytes!(green bold); //  cd
+const COLOUR_EXECUTABLE_DEFAULT: &[u8] = ansi_bytes!(green bold); //    ex
+const COLOUR_STICKY_DEFAULT: &[u8] = ansi_bytes!(white   blue);   // st
+const COLOUR_OTHER_WRITABLE_DEFAULT: &[u8]      = ansi_bytes!(blue    green); // ow
+const COLOUR_ORPHAN_SYMLINK_DEFAULT: &[u8]  = ansi_bytes!(red bold); // or
+const COLOUR_SETUID_DEFAULT: &[u8]              = ansi_bytes!(white   red);      // su 
+const COLOUR_SETGID_DEFAULT: &[u8]   = ansi_bytes!(white   magenta); // sg 
+
 
 fn main() {
     let custom_colours = env::var("CUSTOM_LS_COLORS");
-    let ls_colors = match custom_colours {
+    let ls_colours = match custom_colours {
         Ok(use_this) => use_this,
         Err(_) => env::var("LS_COLORS").unwrap_or_default(),
     };
-    let mut color_map = parse_ls_colours(&ls_colors);
+    let mut colour_map = parse_ls_colours(&ls_colours);
 
-    // Add fallback colors for common extensions
-    add_new_colours(&mut color_map);
-    add_defaults(&mut color_map);
+    // Add fallback colours for common extensions
+    add_new_colours(&mut colour_map);
+    add_defaults(&mut colour_map);
 
     //this is a cargo environment variable that points to the output directory
     //where the generated file will be placed.
@@ -81,7 +87,7 @@ fn main() {
     let mut f = File::create(&dest_path).unwrap();
 
     writeln!(f, "use phf::phf_map;").unwrap();
-    writeln!(f, "/// This is a compile-time hash map of file extensions to their corresponding ANSI color codes").unwrap();
+    writeln!(f, "/// This is a compile-time hash map of file extensions to their corresponding ANSI colour codes").unwrap();
     writeln!(f, "/// based on the `LS_COLORS` environment variable.").unwrap();
     writeln!(f, "///").unwrap();
     writeln!(
@@ -116,7 +122,7 @@ fn main() {
 
 
 
-    for (key, escape_seq) in color_map {
+    for (key, escape_seq) in colour_map {
         // Convert the escape sequence to bytes and escape special characters
         let escaped_seq = lambda_escape_string(&escape_seq);
         // Write the key-value pair to the file
@@ -130,23 +136,24 @@ fn main() {
 
 
 
+
+
 fn parse_ls_colours(ls_colours: &str) -> HashMap<String, Vec<u8>> {
-    // Helper function to format ANSI escape sequences
-    let format_ansi_sequence = |code: &str| -> Vec<u8> { format!("\x1b[{}m", code).into_bytes() };
+    let format_ansi_sequence = |code: &str| -> Vec<u8> {
+        format!("\x1b[{}m", code).into_bytes()
+    };
 
     let insert_colour = |map: &mut HashMap<String, Vec<u8>>, key: &str, value: &str| {
         map.insert(key.to_string(), format_ansi_sequence(value));
     };
 
-    let mut color_map = HashMap::new();
+    let mut colour_map = HashMap::new();
 
     for entry in ls_colours.split(':') {
-        // Skip empty entries
         if entry.is_empty() {
             continue;
         }
 
-        // Split into key=value parts
         let parts: Vec<&str> = entry.splitn(2, '=').collect();
         if parts.len() != 2 {
             continue;
@@ -154,49 +161,32 @@ fn parse_ls_colours(ls_colours: &str) -> HashMap<String, Vec<u8>> {
 
         let (key, value) = (parts[0], parts[1]);
 
-        // Handle directory entry
-        if key == "di" {
-            insert_colour(&mut color_map, "directory", value);
-            continue;
-        }
-
-        // Handle symlink entry
-        if key == "ln" {
-            insert_colour(&mut color_map, "symlink", value);
-            continue;
-        }
-        if key == "so" {
-            insert_colour(&mut color_map, "socket", value);
-            continue;
-        }
-        if key == "pi" {
-            insert_colour(&mut color_map, "pipe", value);
-            continue;
-        }
-        if key == "bd" {
-            insert_colour(&mut color_map, "block_device", value);
-            continue;
-        }
-        if key == "cd" {
-            insert_colour(&mut color_map, "character_device", value);
-            continue;
-        }
-        if key == "ex" {
-            insert_colour(&mut color_map, "executable", value);
-            continue;
-        }
-
-        // Handle file extensions (e.g., *.rs)
-        if key.starts_with("*.") {
-            let extension = key[2..].to_string();
-            insert_colour(&mut color_map, &extension, value);
+        match key {
+            "di" => insert_colour(&mut colour_map, "directory", value), //directory
+            "ln" => insert_colour(&mut colour_map, "symlink", value),
+            "so" => insert_colour(&mut colour_map, "socket", value),
+            "pi" => insert_colour(&mut colour_map, "pipe", value),
+            "bd" => insert_colour(&mut colour_map, "block_device", value),
+            "cd" => insert_colour(&mut colour_map, "character_device", value),
+            "ex" => insert_colour(&mut colour_map, "executable", value),
+            "st" => insert_colour(&mut colour_map, "sticky", value), //st
+            "ow" => insert_colour(&mut colour_map, "other_writable", value),
+            "or" => insert_colour(&mut colour_map, "orphan_symlink", value),
+            "su" => insert_colour(&mut colour_map, "setuid", value),
+            "sg" => insert_colour(&mut colour_map, "setgid", value),
+            "tw" => insert_colour(&mut colour_map, "other_writable", value),
+            _ if key.starts_with("*.") => {
+                let extension = &key[2..];
+                insert_colour(&mut colour_map, extension, value);
+            }
+            _ => {} // Ignore invalids
         }
     }
 
-    color_map
+    colour_map
 }
 
-// Adds new colours for common file extensions if they are not already in the map.
+
 fn add_new_colours(colour_map: &mut HashMap<String, Vec<u8>>) {
     // Only add fallback if the extension isn't already in the map
     let fallbacks = vec![
@@ -245,14 +235,6 @@ fn add_new_colours(colour_map: &mut HashMap<String, Vec<u8>>) {
     }
 }
 
-//a helper function to insert multiple extensions with the same color
-//this is used to avoid code duplication in the add_defaults function.
-//it takes a mutable reference to the map, a slice of extensions, and a color byte
-fn insert_extensions(map: &mut HashMap<String, Vec<u8>>, extensions: &[&str], color: &[u8]) {
-    for ext in extensions {
-        map.entry(ext.to_string()).or_insert_with(|| color.to_vec());
-    }
-}
 
 //we don't need to worry about dtypes, that's handled by my macro.
 //copied from my ls environment variable.
@@ -261,6 +243,13 @@ fn add_defaults(map: &mut HashMap<String, Vec<u8>>) {
     let magenta = ansi_bytes!(rgb(200, 100, 200)).to_vec(); // images/videos
     let cyan = ansi_bytes!(rgb(0, 200, 200)).to_vec(); // audio
     let gray = ansi_bytes!(rgb(128, 128, 128)).to_vec(); // backups
+    // Define a closure to insert extensions with their corresponding colours
+    let insert_extensions = |map: &mut HashMap<String, Vec<u8>>, extensions: &[&str], colour: &[u8]| {
+    for ext in extensions {
+        map.entry(ext.to_string()).or_insert_with(|| colour.to_vec());
+    }
+    };
+
     let compressed = [
         "7z", "ace", "alz", "apk", "arc", "arj", "bz", "bz2", "cab", "cpio", "crate", "deb",
         "drpm", "dwm", "dz", "ear", "egg", "esd", "gz", "jar", "lha", "lrz", "lz", "lz4", "lzh",
@@ -321,12 +310,11 @@ fn add_defaults(map: &mut HashMap<String, Vec<u8>>) {
     ];
 
     for (key, colour) in specials {
-        if !map.contains_key(key) {
-            // Only insert if the key does not already exist
-            // This prevents overwriting existing colours
-            // for the same key.
+      
             map.entry(key.to_string())
                 .or_insert_with(|| colour.to_vec());
+            //insert with checks if the key already exists
+            //this is to avoid overwriting existing values.
         }
     }
-}
+
