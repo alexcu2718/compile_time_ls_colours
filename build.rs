@@ -73,9 +73,9 @@ fn main() {
     // Add fallback colors for common extensions
     add_new_colours(&mut color_map);
     add_defaults(&mut color_map);
-    //we dont add the defaults d_types here, we handle them via a macro (becayse they're not defined as extensions!)
-    // Generate the static PHF map
 
+    //this is a cargo environment variable that points to the output directory
+    //where the generated file will be placed.
     let out_dir = env::var("OUT_DIR").unwrap();
     let dest_path = std::path::Path::new(&out_dir).join("ls_colours.rs");
     let mut f = File::create(&dest_path).unwrap();
@@ -114,6 +114,8 @@ fn main() {
             .replace('\"', "\\\"")
     };
 
+
+
     for (key, escape_seq) in color_map {
         // Convert the escape sequence to bytes and escape special characters
         let escaped_seq = lambda_escape_string(&escape_seq);
@@ -124,11 +126,15 @@ fn main() {
     writeln!(f, "}};").unwrap();
 }
 
+
+
+
+
 fn parse_ls_colours(ls_colours: &str) -> HashMap<String, Vec<u8>> {
     // Helper function to format ANSI escape sequences
     let format_ansi_sequence = |code: &str| -> Vec<u8> { format!("\x1b[{}m", code).into_bytes() };
 
-    let insert_color = |map: &mut HashMap<String, Vec<u8>>, key: &str, value: &str| {
+    let insert_colour = |map: &mut HashMap<String, Vec<u8>>, key: &str, value: &str| {
         map.insert(key.to_string(), format_ansi_sequence(value));
     };
 
@@ -150,40 +156,40 @@ fn parse_ls_colours(ls_colours: &str) -> HashMap<String, Vec<u8>> {
 
         // Handle directory entry
         if key == "di" {
-            insert_color(&mut color_map, "directory", value);
+            insert_colour(&mut color_map, "directory", value);
             continue;
         }
 
         // Handle symlink entry
         if key == "ln" {
-            insert_color(&mut color_map, "symlink", value);
+            insert_colour(&mut color_map, "symlink", value);
             continue;
         }
         if key == "so" {
-            insert_color(&mut color_map, "socket", value);
+            insert_colour(&mut color_map, "socket", value);
             continue;
         }
         if key == "pi" {
-            insert_color(&mut color_map, "pipe", value);
+            insert_colour(&mut color_map, "pipe", value);
             continue;
         }
         if key == "bd" {
-            insert_color(&mut color_map, "block_device", value);
+            insert_colour(&mut color_map, "block_device", value);
             continue;
         }
         if key == "cd" {
-            insert_color(&mut color_map, "character_device", value);
+            insert_colour(&mut color_map, "character_device", value);
             continue;
         }
         if key == "ex" {
-            insert_color(&mut color_map, "executable", value);
+            insert_colour(&mut color_map, "executable", value);
             continue;
         }
 
         // Handle file extensions (e.g., *.rs)
         if key.starts_with("*.") {
             let extension = key[2..].to_string();
-            insert_color(&mut color_map, &extension, value);
+            insert_colour(&mut color_map, &extension, value);
         }
     }
 
