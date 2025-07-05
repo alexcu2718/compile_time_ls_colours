@@ -9,7 +9,7 @@ pub const NO_COLOUR: &[u8] = b"\x1b[0m"; // Reset colour code
 /// Falls back to `or_alternative` if the extension is not found in the colour map.
 #[inline]
 pub fn colour_path_or_alternative<'a>(extension: &'a [u8], or_alternative: &'a [u8]) -> &'a [u8] {
-    //has at least the lifetime of the extension
+    //has at least the lifetime of the extension (this cannot be static)
     LS_COLOURS_HASHMAP
         .get(extension)
         .map(|v| &**v)
@@ -19,7 +19,7 @@ pub fn colour_path_or_alternative<'a>(extension: &'a [u8], or_alternative: &'a [
 /// Returns the colour code for a given file extension if it exists in the colour map.
 /// Returns `None` if not found.
 #[inline]
-pub fn colour_path<'a>(extension: &'a [u8]) -> Option<&'a [u8]> {
+pub fn colour_path<'a>(extension: &'a [u8]) -> Option<&'static [u8]> {
     LS_COLOURS_HASHMAP.get(extension).map(|v| &**v)
 }
 
@@ -27,7 +27,7 @@ pub fn colour_path<'a>(extension: &'a [u8]) -> Option<&'a [u8]> {
 /// This is useful for cases where you want to ensure a reset colour code is used
 /// when the file type is not recognized.
 #[inline]
-pub fn colour_path_or_reset<'a>(extension: &'a [u8]) -> &'a [u8] {
+pub fn colour_path_or_reset<'a>(extension: &'a [u8]) -> &'static [u8] {
     LS_COLOURS_HASHMAP
         .get(extension)
         .map(|v| &**v)

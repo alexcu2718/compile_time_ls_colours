@@ -8,8 +8,6 @@ It provides colour coding for file types in terminal applications. Keys are byte
 
 Values are byte slices representing ANSI escape sequences which are generated at build time from the LS_COLORS environment variable.
 
-SIDE COMMENT:EVERYTHING USES COLOR AND NOT COLOUR AND IM BRITISH AND I GET SO ANNOYED BECAUSE I GET LAZY TOO
-
 ## Caveats
 
 This doesn't make any system calls, so we cannot get any information about being an executable,
@@ -76,7 +74,7 @@ pub fn colour_path(extension:&'static [u8])->Option<&'static[u8]>{
 /// Like `colour_path_or_alternative`, but defaults to `NO_COLOUR` if extension is not recognized.
 /// This is useful for cases where you want to ensure a reset colour code is used
 /// when the file type is not recognized.
-pub fn colour_path_or_reset<'a>(extension: &'a  [u8]) -> &'a [u8] {
+pub fn colour_path_or_reset<'a>(extension: &'a  [u8]) -> &'static [u8] {
     LS_COLOURS_HASHMAP.get(extension).map(|v| &**v).unwrap_or_else(|| NO_COLOUR)
 }
 
@@ -89,7 +87,10 @@ pub fn colour_path_or_reset<'a>(extension: &'a  [u8]) -> &'a [u8] {
 /// #   We have to cheat around limitations here.                                                                           #
 /// #   The macro is NOT unsafe, because we know at compile time that certain entries like                                  #
 /// #   "symlink" and "directory" will always exist in the colour table. because we auto generate them!                     #
-/// #                                                    
+/// #    The only unsafe access pattern is on SPECIFIED keywords,which are GUARANTEED (by my defaults)                      #
+/// #    Ultimately I feel that this is `explicitly` the reason to USE unwrap_unchecked ffs(guarantees)                     #
+/// #                                                                                                                       #    
+/// #                                                                                                                       #    
 /// #                                                                                                                       #
 /// #########################################################################################################################
 #[macro_export]
