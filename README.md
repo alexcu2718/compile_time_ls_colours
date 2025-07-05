@@ -39,7 +39,7 @@ let symlink_colour: &[u8] = file_type_colour!(symlink);
  let ext_rs= b"rs";
  // Get colour for a known extension (e.g., b"rs")
  let rs_colour: &'static [u8] = file_type_colour!(ext_rs);
-  Get fallback colour if extension is not in the map
+  //Get fallback colour if extension is not in the map
  let ext = b"txt";
  let unknown_colour: &'static [u8] = file_type_colour!(ext); // defaults to NO_COLOUR if not a keyword (directory/symlink)
  
@@ -52,7 +52,8 @@ let executable_colour: &'static [u8] = file_type_colour!(executable);
 
 ```rust
 //function definitions below
-
+//ADDED BONUS, FREE COLOUR VARIABLES;
+use compile_time_ls_colours::{COLOUR_SYMLINK_DEFAULT,COLOUR_GO};//ETCETCETC
 
 //This is a compile-time hash map of file extensions to their corresponding ANSI color codes based on the LS_COLORS environment variable.
 pub static LS_COLOURS_HASHMAP: Map<&'static [u8], &'static [u8]>
@@ -78,6 +79,8 @@ pub fn colour_path_or_reset<'a>(extension: &'a  [u8]) -> &'static [u8] {
     LS_COLOURS_HASHMAP.get(extension).map(|v| &**v).unwrap_or_else(|| NO_COLOUR)
 }
 
+
+/// BONUS FEATURE; YOU CAN VERIFY THE BACKUPS EXIST NOW BECAUSE THEY EXIST AS IMPORTS.
 /// #########################################################################################################################
 /// #                                                                                                                       #
 /// #                    R E A D   T H I S  BEFORE YOU GET PISSED ABOUT UNSAFE                                              #     
@@ -93,6 +96,8 @@ pub fn colour_path_or_reset<'a>(extension: &'a  [u8]) -> &'static [u8] {
 /// #                                                                                                                       #    
 /// #                                                                                                                       #
 /// #########################################################################################################################
+
+
 #[macro_export]
 macro_rules! file_type_colour {
     (symlink) => {

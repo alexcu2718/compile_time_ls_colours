@@ -3,8 +3,6 @@ include!(concat!(env!("OUT_DIR"), "/ls_colours.rs"));
 #[cfg(test)]
 mod test;
 
-pub const NO_COLOUR: &[u8] = b"\x1b[0m"; // Reset colour code
-
 /// Returns the colour code for a given file extension.
 /// Falls back to `or_alternative` if the extension is not found in the colour map.
 #[inline]
@@ -23,9 +21,9 @@ pub fn colour_path<'a>(extension: &'a [u8]) -> Option<&'static [u8]> {
     LS_COLOURS_HASHMAP.get(extension).map(|v| &**v)
 }
 
-/// Like `colour_path_or_alternative`, but defaults to `NO_COLOR` if extension is not recognized.
+/// Like `colour_path_or_alternative`, but defaults to `NO_COLOR` if extension is not recognised.
 /// This is useful for cases where you want to ensure a reset colour code is used
-/// when the file type is not recognized.
+/// when the file type is not recognised.
 #[inline]
 pub fn colour_path_or_reset<'a>(extension: &'a [u8]) -> &'static [u8] {
     LS_COLOURS_HASHMAP
@@ -38,7 +36,7 @@ pub fn colour_path_or_reset<'a>(extension: &'a [u8]) -> &'static [u8] {
 /// Macro to generate a colour code for a file type based on its name/type.
 ///
 /// It uses the `colour_path_or_alternative` function to retrieve a colour from
-/// the internal LS_COLORS map. If the file type is not recognized,
+/// the internal LS_COLORS map. If the file type is not recognised,
 ///
 /// # Usage
 ///

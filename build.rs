@@ -66,6 +66,66 @@ const COLOUR_OTHER_WRITABLE_DEFAULT: &[u8]      = ansi_bytes!(blue    green); //
 const COLOUR_ORPHAN_SYMLINK_DEFAULT: &[u8]  = ansi_bytes!(red bold); // or
 const COLOUR_SETUID_DEFAULT: &[u8]              = ansi_bytes!(white   red);      // su 
 const COLOUR_SETGID_DEFAULT: &[u8]   = ansi_bytes!(white   magenta); // sg 
+const NO_COLOUR: &[u8] = ansi_bytes!(reset);
+
+
+///A  trait on a file, basically allowing a lot less boiler plate in the main function (so the logic is more obvious)
+pub trait BuildWriter{
+
+    fn write_constant_bytes(&mut self,name:&str,colour_bytes:&'static [u8]);
+
+    fn write_comment(&mut self,paragraph_of_stuff:&str);
+
+    fn write_code(&mut self,be_code_please:&str);
+
+
+    fn write_code_comment(&mut self,paragraph_of_stuff:&str,reference:&str);
+
+    fn write_escape_colour_code(&mut self,key:&str,bytes:&Vec<u8>);
+  
+
+}
+
+impl BuildWriter for File{
+
+
+    fn write_constant_bytes(&mut self,name:&str,colour_bytes:&[u8]){
+        self.write_code_comment("Generated code for",name);
+         writeln!(self,"pub const {}: &[u8] = &{:?} ;\n",name,colour_bytes).unwrap();
+    }
+
+    fn write_code_comment(&mut self,paragraph_of_stuff:&str,reference:&str){
+        writeln!(self,"///{paragraph_of_stuff} for {}",reference).unwrap()
+    }
+
+    fn write_comment(&mut self,paragraph_of_stuff:&str) {
+        writeln!(self,"///{paragraph_of_stuff}").unwrap()
+    }
+
+
+    fn write_code(&mut self,be_code_please:&str) {
+        writeln!(self,"{be_code_please}").unwrap()
+    }
+
+
+    fn write_escape_colour_code(&mut self,key:&str,bytes:&Vec<u8>){
+
+    // Define a closure to escape special characters in the ANSI escape sequences
+    //also to simplify the code, since performance doesnt matter here.
+    let lambda_escape_string = |s: &Vec<u8>| {
+        String::from_utf8_lossy(s)
+            .replace('\\', "\\\\")
+            .replace('\"', "\\\"")
+    };
+
+    let escaped_seq=lambda_escape_string(&bytes);
+  
+        writeln!(self, "    b\"{}\" => b\"{}\",", key, escaped_seq).unwrap();
+
+
+
+    }
+}
 
 
 fn main() {
@@ -85,51 +145,78 @@ fn main() {
     let out_dir = env::var("OUT_DIR").unwrap();
     let dest_path = std::path::Path::new(&out_dir).join("ls_colours.rs");
     let mut f = File::create(&dest_path).unwrap();
+    f.write_comment("Predefined colour constants");
+     // Generate all colour constants using the trait method
+    f.write_constant_bytes("NO_COLOUR",NO_COLOUR);
+    f.write_constant_bytes("COLOUR_RS", COLOUR_RS);
+    f.write_constant_bytes("COLOUR_PY", COLOUR_PY);
+    f.write_constant_bytes("COLOUR_CPP", COLOUR_CPP);
+    f.write_constant_bytes("COLOUR_H", COLOUR_H);
+    f.write_constant_bytes("COLOUR_C", COLOUR_C);
+    f.write_constant_bytes("COLOUR_LUA", COLOUR_LUA);
+    f.write_constant_bytes("COLOUR_HTML", COLOUR_HTML);
+    f.write_constant_bytes("COLOUR_CSS", COLOUR_CSS);
+    f.write_constant_bytes("COLOUR_JS", COLOUR_JS);
+    f.write_constant_bytes("COLOUR_JSON", COLOUR_JSON);
+    f.write_constant_bytes("COLOUR_TOML", COLOUR_TOML);
+    f.write_constant_bytes("COLOUR_TXT", COLOUR_TXT);
+    f.write_constant_bytes("COLOUR_MD", COLOUR_MD);
+    f.write_constant_bytes("COLOUR_INI", COLOUR_INI);
+    f.write_constant_bytes("COLOUR_CFG", COLOUR_CFG);
+    f.write_constant_bytes("COLOUR_XML", COLOUR_XML);
+    f.write_constant_bytes("COLOUR_YML", COLOUR_YML);
+    f.write_constant_bytes("COLOUR_TS", COLOUR_TS);
+    f.write_constant_bytes("COLOUR_SH", COLOUR_SH);
+    f.write_constant_bytes("COLOUR_BAT", COLOUR_BAT);
+    f.write_constant_bytes("COLOUR_RB", COLOUR_RB);
+    f.write_constant_bytes("COLOUR_PHP", COLOUR_PHP);
+    f.write_constant_bytes("COLOUR_PL", COLOUR_PL);
+    f.write_constant_bytes("COLOUR_R", COLOUR_R);
+    f.write_constant_bytes("COLOUR_CS", COLOUR_CS);
+    f.write_constant_bytes("COLOUR_JAVA", COLOUR_JAVA);
+    f.write_constant_bytes("COLOUR_GO", COLOUR_GO);
+    f.write_constant_bytes("COLOUR_SWIFT", COLOUR_SWIFT);
+    f.write_constant_bytes("COLOUR_KT", COLOUR_KT);
+    f.write_constant_bytes("COLOUR_SCSS", COLOUR_SCSS);
+    f.write_constant_bytes("COLOUR_LESS", COLOUR_LESS);
+    f.write_constant_bytes("COLOUR_CSV", COLOUR_CSV);
+    f.write_constant_bytes("COLOUR_TSV", COLOUR_TSV);
+    f.write_constant_bytes("COLOUR_XLS", COLOUR_XLS);
+    f.write_constant_bytes("COLOUR_XLSX", COLOUR_XLSX);
+    f.write_constant_bytes("COLOUR_SQL", COLOUR_SQL);
+    f.write_constant_bytes("COLOUR_SYMLINK_DEFAULT", COLOUR_SYMLINK_DEFAULT);
+    f.write_constant_bytes("COLOUR_DIRECTORY_DEFAULT", COLOUR_DIRECTORY_DEFAULT);
+    f.write_constant_bytes("COLOUR_SOCKET_DEFAULT", COLOUR_SOCKET_DEFAULT);
+    f.write_constant_bytes("COLOUR_PIPE_DEFAULT", COLOUR_PIPE_DEFAULT);
+    f.write_constant_bytes("COLOUR_BLOCK_DEVICE_DEFAULT", COLOUR_BLOCK_DEVICE_DEFAULT);
+    f.write_constant_bytes("COLOUR_CHARACTER_DEVICE_DEFAULT", COLOUR_CHARACTER_DEVICE_DEFAULT);
+    f.write_constant_bytes("COLOUR_EXECUTABLE_DEFAULT", COLOUR_EXECUTABLE_DEFAULT);
+    f.write_constant_bytes("COLOUR_STICKY_DEFAULT", COLOUR_STICKY_DEFAULT);
+    f.write_constant_bytes("COLOUR_OTHER_WRITABLE_DEFAULT", COLOUR_OTHER_WRITABLE_DEFAULT);
+    f.write_constant_bytes("COLOUR_ORPHAN_SYMLINK_DEFAULT", COLOUR_ORPHAN_SYMLINK_DEFAULT);
+    f.write_constant_bytes("COLOUR_SETUID_DEFAULT", COLOUR_SETUID_DEFAULT);
+    f.write_constant_bytes("COLOUR_SETGID_DEFAULT", COLOUR_SETGID_DEFAULT);
+    f.write_code("use phf::phf_map;");
+    f.write_comment("This is a compile-time hash map of file extensions to their corresponding ANSI colour codes");
+    f.write_comment(" based on the `LS_COLORS` environment variable.");
+    f.write_comment("");
+    f.write_comment("It provides colour coding for file types in terminal applications.");
+    f.write_comment("Keys are byte slices representing file extensions.");
+    f.write_comment(" Values are byte slices representing ANSI escape sequences.");
+    f.write_comment(" Generated at build time from the LS_COLORS environment variable." );
 
-    writeln!(f, "use phf::phf_map;").unwrap();
-    writeln!(f, "/// This is a compile-time hash map of file extensions to their corresponding ANSI colour codes").unwrap();
-    writeln!(f, "/// based on the `LS_COLORS` environment variable.").unwrap();
-    writeln!(f, "///").unwrap();
-    writeln!(
-        f,
-        "/// It provides colour coding for file types in terminal applications."
-    )
-    .unwrap();
-    writeln!(f, "/// Keys are byte slices representing file extensions.").unwrap();
-    writeln!(
-        f,
-        "/// Values are byte slices representing ANSI escape sequences."
-    )
-    .unwrap();
-    writeln!(
-        f,
-        "/// Generated at build time from the LS_COLORS environment variable."
-    )
-    .unwrap();
-    writeln!(
-        f,
-        "pub static LS_COLOURS_HASHMAP: phf::Map<&'static [u8], &'static [u8]> = phf_map! {{"
-    )
-    .unwrap();
 
-    // Define a closure to escape special characters in the ANSI escape sequences
-    //also to simplif the code, since performance doesnt matter here.
-    let lambda_escape_string = |s: &Vec<u8>| {
-        String::from_utf8_lossy(s)
-            .replace('\\', "\\\\")
-            .replace('\"', "\\\"")
-    };
+    f.write_code("pub static LS_COLOURS_HASHMAP: phf::Map<&'static [u8], &'static [u8]> = phf_map! {");
 
 
 
     for (key, escape_seq) in colour_map {
-        // Convert the escape sequence to bytes and escape special characters
-        let escaped_seq = lambda_escape_string(&escape_seq);
-        // Write the key-value pair to the file
-        writeln!(f, "    b\"{}\" => b\"{}\",", key, escaped_seq).unwrap();
+       
+       
+        f.write_escape_colour_code(&key,&escape_seq)
     }
 
-    writeln!(f, "}};").unwrap();
+    f.write_code("};");
 }
 
 
