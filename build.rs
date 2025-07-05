@@ -156,7 +156,7 @@ fn parse_ls_colours(ls_colours: &str) -> HashMap<String, Vec<u8>> {
 
         // Handle symlink entry
         if key == "ln" {
-            insert_color(&mut color_map, "symlnk", value);
+            insert_color(&mut color_map, "symlink", value);
             continue;
         }
         if key == "so" {

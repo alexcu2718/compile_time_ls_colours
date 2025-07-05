@@ -34,6 +34,7 @@ pub fn colour_path_or_reset<'a>(extension: &'a [u8]) -> &'a [u8] {
         .unwrap_or_else(|| NO_COLOUR)
 }
 
+
 /// Macro to generate a colour code for a file type based on its name/type.
 ///
 /// It uses the `colour_path_or_alternative` function to retrieve a colour from
