@@ -61,83 +61,56 @@ const COLOUR_PIPE_DEFAULT: &[u8] = ansi_bytes!(yellow bold); //pi
 const COLOUR_BLOCK_DEVICE_DEFAULT: &[u8] = ansi_bytes!(red bold); //bd
 const COLOUR_CHARACTER_DEVICE_DEFAULT: &[u8] = ansi_bytes!(green bold); //  cd
 const COLOUR_EXECUTABLE_DEFAULT: &[u8] = ansi_bytes!(green bold); //    ex
-const COLOUR_STICKY_DEFAULT: &[u8] = ansi_bytes!(white   blue);   // st
-const COLOUR_OTHER_WRITABLE_DEFAULT: &[u8]      = ansi_bytes!(blue    green); // ow
-const COLOUR_ORPHAN_SYMLINK_DEFAULT: &[u8]  = ansi_bytes!(red bold); // or
-const COLOUR_SETUID_DEFAULT: &[u8]              = ansi_bytes!(white   red);      // su 
-const COLOUR_SETGID_DEFAULT: &[u8]   = ansi_bytes!(white   magenta); // sg 
+const COLOUR_STICKY_DEFAULT: &[u8] = ansi_bytes!(white   blue); // st
+const COLOUR_OTHER_WRITABLE_DEFAULT: &[u8] = ansi_bytes!(blue    green); // ow
+const COLOUR_ORPHAN_SYMLINK_DEFAULT: &[u8] = ansi_bytes!(red bold); // or
+const COLOUR_SETUID_DEFAULT: &[u8] = ansi_bytes!(white   red); // su 
+const COLOUR_SETGID_DEFAULT: &[u8] = ansi_bytes!(white   magenta); // sg 
 const NO_COLOUR: &[u8] = ansi_bytes!(reset);
 
-
 ///A  trait on a file, basically allowing a lot less boiler plate in the main function (so the logic is more obvious)
-pub trait BuildWriter{
+pub trait BuildWriter {
+    fn write_constant_bytes(&mut self, name: &str, colour_bytes: &'static [u8]);
 
-    fn write_constant_bytes(&mut self,name:&str,colour_bytes:&'static [u8]);
+    fn write_comment(&mut self, paragraph_of_stuff: &str);
 
-    fn write_comment(&mut self,paragraph_of_stuff:&str);
+    fn write_code(&mut self, be_code_please: &str);
 
-    fn write_code(&mut self,be_code_please:&str);
+    fn write_code_comment(&mut self, paragraph_of_stuff: &str, reference: &str);
 
-
-    fn write_code_comment(&mut self,paragraph_of_stuff:&str,reference:&str);
-
-    fn write_escape_colour_code(&mut self,key:&str,bytes:&Vec<u8>);
-  
-
+    fn write_escape_colour_code(&mut self, key: &str, bytes: &Vec<u8>);
 }
 
-
-fn escape_bytes(byt:&Vec<u8>)->String{
+fn escape_bytes(byt: &Vec<u8>) -> String {
     String::from_utf8_lossy(byt)
-            .replace('\\', "\\\\")
-            .replace('\"', "\\\"")
-
+        .replace('\\', "\\\\")
+        .replace('\"', "\\\"")
 }
 
-impl BuildWriter for File{
-
-
-    fn write_constant_bytes(&mut self,name:&str,colour_bytes:&[u8]){
-        self.write_code_comment("Generated code for",name);
-         writeln!(self,"pub const {}: &[u8] = &{:?} ;\n",name,colour_bytes).unwrap();
+impl BuildWriter for File {
+    fn write_constant_bytes(&mut self, name: &str, colour_bytes: &[u8]) {
+        self.write_code_comment("Generated code for", name);
+        writeln!(self, "pub const {}: &[u8] = &{:?} ;\n", name, colour_bytes).unwrap();
     }
 
-    fn write_code_comment(&mut self,paragraph_of_stuff:&str,reference:&str){
-        writeln!(self,"///{paragraph_of_stuff} for {}",reference).unwrap()
+    fn write_code_comment(&mut self, paragraph_of_stuff: &str, reference: &str) {
+        writeln!(self, "///{paragraph_of_stuff} for {}", reference).unwrap()
     }
 
-    fn write_comment(&mut self,paragraph_of_stuff:&str) {
-        writeln!(self,"///{paragraph_of_stuff}").unwrap()
+    fn write_comment(&mut self, paragraph_of_stuff: &str) {
+        writeln!(self, "///{paragraph_of_stuff}").unwrap()
     }
 
-
-    fn write_code(&mut self,be_code_please:&str) {
-
-     
-        
-        writeln!(self,"{be_code_please}").unwrap()
+    fn write_code(&mut self, be_code_please: &str) {
+        writeln!(self, "{be_code_please}").unwrap()
     }
 
+    fn write_escape_colour_code(&mut self, key: &str, bytes: &Vec<u8>) {
+        let escaped_seq = escape_bytes(bytes);
 
-
-
-
-
-    fn write_escape_colour_code(&mut self,key:&str,bytes:&Vec<u8>){
-
-    // Define a closure to escape special characters in the ANSI escape sequences
-    //also to simplify the code, since performance doesnt matter here.
-
-
-    let escaped_seq=escape_bytes(bytes);
-  
         writeln!(self, "    b\"{}\" => b\"{}\",", key, escaped_seq).unwrap();
-
-
-
     }
 }
-
 
 fn main() {
     let custom_colours = env::var("CUSTOM_LS_COLORS");
@@ -157,8 +130,8 @@ fn main() {
     let dest_path = std::path::Path::new(&out_dir).join("ls_colours.rs");
     let mut f = File::create(&dest_path).unwrap();
     f.write_comment("Predefined colour constants");
-     // Generate all colour constants using the trait method
-    f.write_constant_bytes("NO_COLOUR",NO_COLOUR);
+    // Generate all colour constants using the trait method
+    f.write_constant_bytes("NO_COLOUR", NO_COLOUR);
     f.write_constant_bytes("COLOUR_RS", COLOUR_RS);
     f.write_constant_bytes("COLOUR_PY", COLOUR_PY);
     f.write_constant_bytes("COLOUR_CPP", COLOUR_CPP);
@@ -200,11 +173,20 @@ fn main() {
     f.write_constant_bytes("COLOUR_SOCKET_DEFAULT", COLOUR_SOCKET_DEFAULT);
     f.write_constant_bytes("COLOUR_PIPE_DEFAULT", COLOUR_PIPE_DEFAULT);
     f.write_constant_bytes("COLOUR_BLOCK_DEVICE_DEFAULT", COLOUR_BLOCK_DEVICE_DEFAULT);
-    f.write_constant_bytes("COLOUR_CHARACTER_DEVICE_DEFAULT", COLOUR_CHARACTER_DEVICE_DEFAULT);
+    f.write_constant_bytes(
+        "COLOUR_CHARACTER_DEVICE_DEFAULT",
+        COLOUR_CHARACTER_DEVICE_DEFAULT,
+    );
     f.write_constant_bytes("COLOUR_EXECUTABLE_DEFAULT", COLOUR_EXECUTABLE_DEFAULT);
     f.write_constant_bytes("COLOUR_STICKY_DEFAULT", COLOUR_STICKY_DEFAULT);
-    f.write_constant_bytes("COLOUR_OTHER_WRITABLE_DEFAULT", COLOUR_OTHER_WRITABLE_DEFAULT);
-    f.write_constant_bytes("COLOUR_ORPHAN_SYMLINK_DEFAULT", COLOUR_ORPHAN_SYMLINK_DEFAULT);
+    f.write_constant_bytes(
+        "COLOUR_OTHER_WRITABLE_DEFAULT",
+        COLOUR_OTHER_WRITABLE_DEFAULT,
+    );
+    f.write_constant_bytes(
+        "COLOUR_ORPHAN_SYMLINK_DEFAULT",
+        COLOUR_ORPHAN_SYMLINK_DEFAULT,
+    );
     f.write_constant_bytes("COLOUR_SETUID_DEFAULT", COLOUR_SETUID_DEFAULT);
     f.write_constant_bytes("COLOUR_SETGID_DEFAULT", COLOUR_SETGID_DEFAULT);
     f.write_code("use phf::phf_map;");
@@ -213,21 +195,17 @@ fn main() {
     f.write_comment("It provides colour coding for file types in terminal applications.");
     f.write_comment("Keys are byte slices representing file extensions.");
     f.write_comment(" Values are byte slices representing ANSI escape sequences.");
-    f.write_comment(" Generated at build time from the LS_COLORS environment variable." );
+    f.write_comment(" Generated at build time from the LS_COLORS environment variable.");
 
-
-    f.write_code("pub static LS_COLOURS_HASHMAP: phf::Map<&'static [u8], &'static [u8]> = phf_map! {");
-
-
+    f.write_code(
+        "pub static LS_COLOURS_HASHMAP: phf::Map<&'static [u8], &'static [u8]> = phf_map! {",
+    );
 
     for (key, escape_seq) in &colour_map {
-       
-       
-        f.write_escape_colour_code(&key,&escape_seq)
+        f.write_escape_colour_code(&key, &escape_seq)
     }
 
     f.write_code("};");
-
 
     f.write_code("use std::collections::HashMap;");
     f.write_code("use std::hash::BuildHasherDefault;");
@@ -241,49 +219,29 @@ fn main() {
     f.write_comment("Generated at build time from the LS_COLORS environment variable.");
     f.write_code("pub const LS_COLOURS_DATA: &[(&'static [u8], &'static [u8])] = &[");
 
-        for (key, escape_seq) in &colour_map {
+    for (key, escape_seq) in &colour_map {
         let escaped_seq = escape_bytes(&escape_seq);
         // Write the key-value pair as a tuple in the const array
-        writeln!(f, "    (b\"{}\", b\"{}\"),", key, escaped_seq).unwrap();
-    }
+        writeln!(f, "    (b\"{}\", b\"{}\"),", key, escaped_seq).unwrap();//for some reason this breaks when i use my trait
+    }//this is obviously a best effort attempt at conciseness, i will work on this .... (it'll involve horrid macros)
 
-    f.write_code( "];\n");
+    f.write_code("];\n");
 
-    f.write_comment("This is a lazily initialized HashMap of file extensions to their corresponding ANSI colour codes.");
+    f.write_comment("This is a lazily initialised HashMap of file extensions to their corresponding ANSI colour codes.");
     f.write_comment(" It is built once at runtime from the `LS_COLORS_CUSTOM` ");
     f.write_comment("the default (LS_COLOR) is used if the environment variable is not set. This is an optional feature to allow custom colours easily.");
-
-      
-       writeln!(
-        f,
-        "pub static LS_COLOURS_HASHMAP_RUNTIME: LazyLock<HashMap<&'static [u8], &'static [u8], BuildHasherDefault<DefaultHasher>>> = LazyLock::new(|| {{"
-    )
-    .unwrap();
-    writeln!(
-        f,
-        "    let mut map = HashMap::with_capacity_and_hasher(LS_COLOURS_DATA.len(), BuildHasherDefault::new());"
-    )
-    .unwrap();
-    writeln!(f, "    for (key, value) in LS_COLOURS_DATA {{").unwrap();
-    f.write_code("map.insert(*key, *value);");
-    writeln!(f, "    }}");
-    f.write_code( "    map");
-    writeln!(f, "}});").unwrap();
-
-
-
+    //basically i'm going to make this an option to use.
+    f.write_code("pub static LS_COLOURS_HASHMAP_RUNTIME: LazyLock<HashMap<&'static [u8], &'static [u8], BuildHasherDefault<DefaultHasher>>> = LazyLock::new(|| {");
+    f.write_code("    let mut map = HashMap::with_capacity_and_hasher(LS_COLOURS_DATA.len(), BuildHasherDefault::new());");
+    f.write_code("    for (key, value) in LS_COLOURS_DATA {");
+    f.write_code("        map.insert(*key, *value);");
+    f.write_code("    }");
+    f.write_code("    map");
+    f.write_code("});");
 }
 
-
-
-
-
-
-
 fn parse_ls_colours(ls_colours: &str) -> HashMap<String, Vec<u8>> {
-    let format_ansi_sequence = |code: &str| -> Vec<u8> {
-        format!("\x1b[{}m", code).into_bytes()
-    };
+    let format_ansi_sequence = |code: &str| -> Vec<u8> { format!("\x1b[{}m", code).into_bytes() };
 
     let insert_colour = |map: &mut HashMap<String, Vec<u8>>, key: &str, value: &str| {
         map.insert(key.to_string(), format_ansi_sequence(value));
@@ -327,7 +285,6 @@ fn parse_ls_colours(ls_colours: &str) -> HashMap<String, Vec<u8>> {
 
     colour_map
 }
-
 
 fn add_new_colours(colour_map: &mut HashMap<String, Vec<u8>>) {
     // Only add fallback if the extension isn't already in the map
@@ -385,11 +342,14 @@ fn add_defaults(map: &mut HashMap<String, Vec<u8>>) {
     let cyan = ansi_bytes!(rgb(0, 200, 200)).to_vec(); // audio
     let gray = ansi_bytes!(rgb(128, 128, 128)).to_vec(); // backups
     // Define a closure to insert extensions with their corresponding colours
-    let insert_extensions = |map: &mut HashMap<String, Vec<u8>>, extensions: &[&str], colour: &[u8]| {
-    for ext in extensions {
-        map.entry(ext.to_string()).or_insert_with(|| colour.to_vec());
-    }
-    };
+    //just makes the code easier to
+    let insert_extensions =
+        |map: &mut HashMap<String, Vec<u8>>, extensions: &[&str], colour: &[u8]| {
+            for ext in extensions {
+                map.entry(ext.to_string())
+                    .or_insert_with(|| colour.to_vec());
+            }
+        };
 
     let compressed = [
         "7z", "ace", "alz", "apk", "arc", "arj", "bz", "bz2", "cab", "cpio", "crate", "deb",
@@ -451,11 +411,9 @@ fn add_defaults(map: &mut HashMap<String, Vec<u8>>) {
     ];
 
     for (key, colour) in specials {
-      
-            map.entry(key.to_string())
-                .or_insert_with(|| colour.to_vec());
-            //insert with checks if the key already exists
-            //this is to avoid overwriting existing values.
-        }
+        map.entry(key.to_string())
+            .or_insert_with(|| colour.to_vec());
+        //insert with checks if the key already exists
+        //this is to avoid overwriting existing values.
     }
-
+}

@@ -32,7 +32,6 @@ pub fn colour_path_or_reset<'a>(extension: &'a [u8]) -> &'static [u8] {
         .unwrap_or_else(|| NO_COLOUR)
 }
 
-
 /// Macro to generate a colour code for a file type based on its name/type.
 ///
 /// It uses the `colour_path_or_alternative` function to retrieve a colour from
@@ -41,20 +40,28 @@ pub fn colour_path_or_reset<'a>(extension: &'a [u8]) -> &'static [u8] {
 /// # Usage
 ///
 /// ```rust
-/// use compile_time_ls_colours::{file_type_colour, NO_COLOUR};
+/// use compile_time_ls_colours::{file_type_colour,LS_COLOURS_HASHMAP, NO_COLOUR,LS_COLOURS_HASHMAP_RUNTIME,colour_path_or_reset};
 ///
 /// // Get colour for a symlink
 /// let symlink_colour: &[u8] = file_type_colour!(symlink);
 ///
 /// // Get colour for a directory
 /// let dir_colour: &'static [u8] = file_type_colour!(directory);
-/// let ext_rs= b"rs";
-/// // Get colour for a known extension (e.g., b"rs")
-/// let rs_colour: &'static [u8] = file_type_colour!(ext_rs);
+
 /// // Get fallback colour if extension is not in the map
-/// let unknown_colour: &'static [u8] = file_type_colour!(b"ext"); // defaults to NO_COLOUR if this extension is not recognised
-///
-///
+/// let unknown_colour: &'static [u8] = colour_path_or_reset(b"ext"); // defaults to NO_COLOUR if this extension is not recognised
+/// let probably_a_colour_maybe:&'static [u8]=colour_path_or_reset(b"sh");//look for shell file colouring or return nothing
+/// 
+/// ///unfortunately due to coercion rules, putting raw literals in (either) hashmaps   is not ideal
+/// //we bypass it below
+/// let run_time_initial:&'static [u8]=LS_COLOURS_HASHMAP_RUNTIME.get(&b"py"[..]).map(|v| &**v).unwrap_or_else(|| NO_COLOUR);
+/// let i_love_this_language:&'static [u8]=b"js";
+/// let colour_of_love:&'static [u8]=LS_COLOURS_HASHMAP_RUNTIME.get(i_love_this_language).map(|v| &**v).unwrap_or_else(|| NO_COLOUR);
+/// 
+/// let compile_time_hashmap_initial:&'static [u8]=LS_COLOURS_HASHMAP.get(&b"py"[..]).map(|v| &**v).unwrap_or_else(|| NO_COLOUR);
+/// let i_should_learn_this_language:&'static [u8]=b"cpp";
+/// let colour_of_grey_hair:&'static [u8]=LS_COLOURS_HASHMAP.get(i_should_learn_this_language).map(|v| &**v).unwrap_or_else(|| NO_COLOUR);
+/// 
 /// let directory_colour: &'static [u8] = file_type_colour!(directory);
 /// let symlink_colour: &'static [u8] = file_type_colour!(symlink);
 /// ```
@@ -87,7 +94,7 @@ macro_rules! file_type_colour {
         unsafe { $crate::colour_path(b"sticky").unwrap_unchecked() }
     };
     (orphan_symlink) => {
-        unsafe { $crate::colour_path(b"orphan_symlink").unwrap_unchecked()}
+        unsafe { $crate::colour_path(b"orphan_symlink").unwrap_unchecked() }
     };
     (setuid) => {
         unsafe { $crate::colour_path(b"setuid").unwrap_unchecked() }
@@ -102,4 +109,3 @@ macro_rules! file_type_colour {
         $crate::colour_path_or_alternative($other, $crate::NO_COLOUR)
     };
 }
-
