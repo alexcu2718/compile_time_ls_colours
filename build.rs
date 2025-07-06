@@ -72,8 +72,10 @@ const NO_COLOUR: &[u8] = ansi_bytes!(reset);
 ///A  trait on a file, basically allowing a lot less boiler plate in the main function (so the logic is more obvious)
 /// not commented at all because i wrote this in a day or so and ill do it when i feel like it.
 /// unfortunately will PROBABLY rely on cursed macros(or rather, I'd like trivial ways to initialise constant time lookups.)
+/// this code is not at all generalisable and is unfortunately shoehorned to fit the usecase
+/// but then again, i'm going to just think on the idly until some `elegant` idea presents itself (wishful init)
 pub trait BuildWriter {
-    fn write_constant_bytes(&mut self, name: &str, colour_bytes: &'static [u8]);
+    fn write_bytes(&mut self, name: &str, colour_bytes: &'static [u8]);
 
     fn write_comment(&mut self, paragraph_of_stuff: &str);
 
@@ -93,7 +95,7 @@ fn escape_bytes(byt: &Vec<u8>) -> String {
 }
 
 impl BuildWriter for File {
-    fn write_constant_bytes(&mut self, name: &str, colour_bytes: &[u8]) {
+    fn write_bytes(&mut self, name: &str, colour_bytes: &[u8]) {
         self.write_code_comment("Generated code for", name);
         writeln!(self, "pub const {}: &[u8] = &{:?} ;\n", name, colour_bytes).unwrap();
     }
@@ -142,64 +144,64 @@ fn main() {
     let mut f = File::create(&dest_path).unwrap();
     f.write_comment("Predefined colour constants");
     // Generate all colour constants using the trait method
-    f.write_constant_bytes("NO_COLOUR", NO_COLOUR);
-    f.write_constant_bytes("COLOUR_RS", COLOUR_RS);
-    f.write_constant_bytes("COLOUR_PY", COLOUR_PY);
-    f.write_constant_bytes("COLOUR_CPP", COLOUR_CPP);
-    f.write_constant_bytes("COLOUR_H", COLOUR_H);
-    f.write_constant_bytes("COLOUR_C", COLOUR_C);
-    f.write_constant_bytes("COLOUR_LUA", COLOUR_LUA);
-    f.write_constant_bytes("COLOUR_HTML", COLOUR_HTML);
-    f.write_constant_bytes("COLOUR_CSS", COLOUR_CSS);
-    f.write_constant_bytes("COLOUR_JS", COLOUR_JS);
-    f.write_constant_bytes("COLOUR_JSON", COLOUR_JSON);
-    f.write_constant_bytes("COLOUR_TOML", COLOUR_TOML);
-    f.write_constant_bytes("COLOUR_TXT", COLOUR_TXT);
-    f.write_constant_bytes("COLOUR_MD", COLOUR_MD);
-    f.write_constant_bytes("COLOUR_INI", COLOUR_INI);
-    f.write_constant_bytes("COLOUR_CFG", COLOUR_CFG);
-    f.write_constant_bytes("COLOUR_XML", COLOUR_XML);
-    f.write_constant_bytes("COLOUR_YML", COLOUR_YML);
-    f.write_constant_bytes("COLOUR_TS", COLOUR_TS);
-    f.write_constant_bytes("COLOUR_SH", COLOUR_SH);
-    f.write_constant_bytes("COLOUR_BAT", COLOUR_BAT);
-    f.write_constant_bytes("COLOUR_RB", COLOUR_RB);
-    f.write_constant_bytes("COLOUR_PHP", COLOUR_PHP);
-    f.write_constant_bytes("COLOUR_PL", COLOUR_PL);
-    f.write_constant_bytes("COLOUR_R", COLOUR_R);
-    f.write_constant_bytes("COLOUR_CS", COLOUR_CS);
-    f.write_constant_bytes("COLOUR_JAVA", COLOUR_JAVA);
-    f.write_constant_bytes("COLOUR_GO", COLOUR_GO);
-    f.write_constant_bytes("COLOUR_SWIFT", COLOUR_SWIFT);
-    f.write_constant_bytes("COLOUR_KT", COLOUR_KT);
-    f.write_constant_bytes("COLOUR_SCSS", COLOUR_SCSS);
-    f.write_constant_bytes("COLOUR_LESS", COLOUR_LESS);
-    f.write_constant_bytes("COLOUR_CSV", COLOUR_CSV);
-    f.write_constant_bytes("COLOUR_TSV", COLOUR_TSV);
-    f.write_constant_bytes("COLOUR_XLS", COLOUR_XLS);
-    f.write_constant_bytes("COLOUR_XLSX", COLOUR_XLSX);
-    f.write_constant_bytes("COLOUR_SQL", COLOUR_SQL);
-    f.write_constant_bytes("COLOUR_SYMLINK_DEFAULT", COLOUR_SYMLINK_DEFAULT);
-    f.write_constant_bytes("COLOUR_DIRECTORY_DEFAULT", COLOUR_DIRECTORY_DEFAULT);
-    f.write_constant_bytes("COLOUR_SOCKET_DEFAULT", COLOUR_SOCKET_DEFAULT);
-    f.write_constant_bytes("COLOUR_PIPE_DEFAULT", COLOUR_PIPE_DEFAULT);
-    f.write_constant_bytes("COLOUR_BLOCK_DEVICE_DEFAULT", COLOUR_BLOCK_DEVICE_DEFAULT);
-    f.write_constant_bytes(
+    f.write_bytes("NO_COLOUR", NO_COLOUR);
+    f.write_bytes("COLOUR_RS", COLOUR_RS);
+    f.write_bytes("COLOUR_PY", COLOUR_PY);
+    f.write_bytes("COLOUR_CPP", COLOUR_CPP);
+    f.write_bytes("COLOUR_H", COLOUR_H);
+    f.write_bytes("COLOUR_C", COLOUR_C);
+    f.write_bytes("COLOUR_LUA", COLOUR_LUA);
+    f.write_bytes("COLOUR_HTML", COLOUR_HTML);
+    f.write_bytes("COLOUR_CSS", COLOUR_CSS);
+    f.write_bytes("COLOUR_JS", COLOUR_JS);
+    f.write_bytes("COLOUR_JSON", COLOUR_JSON);
+    f.write_bytes("COLOUR_TOML", COLOUR_TOML);
+    f.write_bytes("COLOUR_TXT", COLOUR_TXT);
+    f.write_bytes("COLOUR_MD", COLOUR_MD);
+    f.write_bytes("COLOUR_INI", COLOUR_INI);
+    f.write_bytes("COLOUR_CFG", COLOUR_CFG);
+    f.write_bytes("COLOUR_XML", COLOUR_XML);
+    f.write_bytes("COLOUR_YML", COLOUR_YML);
+    f.write_bytes("COLOUR_TS", COLOUR_TS);
+    f.write_bytes("COLOUR_SH", COLOUR_SH);
+    f.write_bytes("COLOUR_BAT", COLOUR_BAT);
+    f.write_bytes("COLOUR_RB", COLOUR_RB);
+    f.write_bytes("COLOUR_PHP", COLOUR_PHP);
+    f.write_bytes("COLOUR_PL", COLOUR_PL);
+    f.write_bytes("COLOUR_R", COLOUR_R);
+    f.write_bytes("COLOUR_CS", COLOUR_CS);
+    f.write_bytes("COLOUR_JAVA", COLOUR_JAVA);
+    f.write_bytes("COLOUR_GO", COLOUR_GO);
+    f.write_bytes("COLOUR_SWIFT", COLOUR_SWIFT);
+    f.write_bytes("COLOUR_KT", COLOUR_KT);
+    f.write_bytes("COLOUR_SCSS", COLOUR_SCSS);
+    f.write_bytes("COLOUR_LESS", COLOUR_LESS);
+    f.write_bytes("COLOUR_CSV", COLOUR_CSV);
+    f.write_bytes("COLOUR_TSV", COLOUR_TSV);
+    f.write_bytes("COLOUR_XLS", COLOUR_XLS);
+    f.write_bytes("COLOUR_XLSX", COLOUR_XLSX);
+    f.write_bytes("COLOUR_SQL", COLOUR_SQL);
+    f.write_bytes("COLOUR_SYMLINK_DEFAULT", COLOUR_SYMLINK_DEFAULT);
+    f.write_bytes("COLOUR_DIRECTORY_DEFAULT", COLOUR_DIRECTORY_DEFAULT);
+    f.write_bytes("COLOUR_SOCKET_DEFAULT", COLOUR_SOCKET_DEFAULT);
+    f.write_bytes("COLOUR_PIPE_DEFAULT", COLOUR_PIPE_DEFAULT);
+    f.write_bytes("COLOUR_BLOCK_DEVICE_DEFAULT", COLOUR_BLOCK_DEVICE_DEFAULT);
+    f.write_bytes(
         "COLOUR_CHARACTER_DEVICE_DEFAULT",
         COLOUR_CHARACTER_DEVICE_DEFAULT,
     );
-    f.write_constant_bytes("COLOUR_EXECUTABLE_DEFAULT", COLOUR_EXECUTABLE_DEFAULT);
-    f.write_constant_bytes("COLOUR_STICKY_DEFAULT", COLOUR_STICKY_DEFAULT);
-    f.write_constant_bytes(
+    f.write_bytes("COLOUR_EXECUTABLE_DEFAULT", COLOUR_EXECUTABLE_DEFAULT);
+    f.write_bytes("COLOUR_STICKY_DEFAULT", COLOUR_STICKY_DEFAULT);
+    f.write_bytes(
         "COLOUR_OTHER_WRITABLE_DEFAULT",
         COLOUR_OTHER_WRITABLE_DEFAULT,
     );
-    f.write_constant_bytes(
+    f.write_bytes(
         "COLOUR_ORPHAN_SYMLINK_DEFAULT",
         COLOUR_ORPHAN_SYMLINK_DEFAULT,
     );
-    f.write_constant_bytes("COLOUR_SETUID_DEFAULT", COLOUR_SETUID_DEFAULT);
-    f.write_constant_bytes("COLOUR_SETGID_DEFAULT", COLOUR_SETGID_DEFAULT);
+    f.write_bytes("COLOUR_SETUID_DEFAULT", COLOUR_SETUID_DEFAULT);
+    f.write_bytes("COLOUR_SETGID_DEFAULT", COLOUR_SETGID_DEFAULT);
     f.write_code("use phf::phf_map;");
     f.write_comment("This is a compile-time hash map of file extensions to their corresponding ANSI colour codes");
     f.write_comment(" based on the `LS_COLORS` environment variable.\n");
@@ -352,7 +354,7 @@ fn add_defaults(map: &mut HashMap<String, Vec<u8>>) {
     let cyan = ansi_bytes!(rgb(0, 200, 200)).to_vec(); // audio
     let gray = ansi_bytes!(rgb(128, 128, 128)).to_vec(); // backups
     // Define a closure to insert extensions with their corresponding colours
-    //just makes the code easier to
+    //just makes the code easier to see the logic below (dont want to define functions everywhere)
     let insert_extensions =
         |map: &mut HashMap<String, Vec<u8>>, extensions: &[&str], colour: &[u8]| {
             for ext in extensions {
