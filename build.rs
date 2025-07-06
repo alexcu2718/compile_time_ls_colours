@@ -86,6 +86,14 @@ pub trait BuildWriter{
 
 }
 
+
+fn escape_bytes(byt:&Vec<u8>)->String{
+    String::from_utf8_lossy(byt)
+            .replace('\\', "\\\\")
+            .replace('\"', "\\\"")
+
+}
+
 impl BuildWriter for File{
 
 
@@ -104,21 +112,24 @@ impl BuildWriter for File{
 
 
     fn write_code(&mut self,be_code_please:&str) {
+
+     
+        
         writeln!(self,"{be_code_please}").unwrap()
     }
+
+
+
+
 
 
     fn write_escape_colour_code(&mut self,key:&str,bytes:&Vec<u8>){
 
     // Define a closure to escape special characters in the ANSI escape sequences
     //also to simplify the code, since performance doesnt matter here.
-    let lambda_escape_string = |s: &Vec<u8>| {
-        String::from_utf8_lossy(s)
-            .replace('\\', "\\\\")
-            .replace('\"', "\\\"")
-    };
 
-    let escaped_seq=lambda_escape_string(&bytes);
+
+    let escaped_seq=escape_bytes(bytes);
   
         writeln!(self, "    b\"{}\" => b\"{}\",", key, escaped_seq).unwrap();
 
@@ -198,8 +209,7 @@ fn main() {
     f.write_constant_bytes("COLOUR_SETGID_DEFAULT", COLOUR_SETGID_DEFAULT);
     f.write_code("use phf::phf_map;");
     f.write_comment("This is a compile-time hash map of file extensions to their corresponding ANSI colour codes");
-    f.write_comment(" based on the `LS_COLORS` environment variable.");
-    f.write_comment("");
+    f.write_comment(" based on the `LS_COLORS` environment variable.\n");
     f.write_comment("It provides colour coding for file types in terminal applications.");
     f.write_comment("Keys are byte slices representing file extensions.");
     f.write_comment(" Values are byte slices representing ANSI escape sequences.");
@@ -210,13 +220,58 @@ fn main() {
 
 
 
-    for (key, escape_seq) in colour_map {
+    for (key, escape_seq) in &colour_map {
        
        
         f.write_escape_colour_code(&key,&escape_seq)
     }
 
     f.write_code("};");
+
+
+    f.write_code("use std::collections::HashMap;");
+    f.write_code("use std::hash::BuildHasherDefault;");
+    f.write_code("use std::hash::DefaultHasher;");
+    f.write_code("use std::sync::LazyLock;");
+    f.write_comment("This is a compile-time generated array of file extensions and their corresponding ANSI colour codes");
+    f.write_comment("based on the `LS_COLORS` environment variable and default fallbacks.");
+    f.write_comment("It provides colour coding for file types in terminal applications.");
+    f.write_comment(" Keys are byte slices representing file extensions.");
+    f.write_comment("Values are byte slices representing ANSI escape sequences.");
+    f.write_comment("Generated at build time from the LS_COLORS environment variable.");
+    f.write_code("pub const LS_COLOURS_DATA: &[(&'static [u8], &'static [u8])] = &[");
+
+        for (key, escape_seq) in &colour_map {
+        let escaped_seq = escape_bytes(&escape_seq);
+        // Write the key-value pair as a tuple in the const array
+        writeln!(f, "    (b\"{}\", b\"{}\"),", key, escaped_seq).unwrap();
+    }
+
+    f.write_code( "];\n");
+
+    f.write_comment("This is a lazily initialized HashMap of file extensions to their corresponding ANSI colour codes.");
+    f.write_comment(" It is built once at runtime from the `LS_COLORS_CUSTOM` ");
+    f.write_comment("the default (LS_COLOR) is used if the environment variable is not set. This is an optional feature to allow custom colours easily.");
+
+      
+       writeln!(
+        f,
+        "pub static LS_COLOURS_HASHMAP_RUNTIME: LazyLock<HashMap<&'static [u8], &'static [u8], BuildHasherDefault<DefaultHasher>>> = LazyLock::new(|| {{"
+    )
+    .unwrap();
+    writeln!(
+        f,
+        "    let mut map = HashMap::with_capacity_and_hasher(LS_COLOURS_DATA.len(), BuildHasherDefault::new());"
+    )
+    .unwrap();
+    writeln!(f, "    for (key, value) in LS_COLOURS_DATA {{").unwrap();
+    f.write_code("map.insert(*key, *value);");
+    writeln!(f, "    }}");
+    f.write_code( "    map");
+    writeln!(f, "}});").unwrap();
+
+
+
 }
 
 
