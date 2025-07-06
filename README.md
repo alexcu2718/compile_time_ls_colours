@@ -1,8 +1,8 @@
 # compile_time_ls_colours
 
+Quick screenshot of how outputs look (rendered from my LS_COLORS)  ((TRUNCATED FOR BREVITY))
+
 ![LS_COLORS HashMap Test Output](./colour_output.png)
-
-
 
 Temporary crate for file extension colour lookups using LS_COLORS format.
 
