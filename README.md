@@ -1,5 +1,9 @@
 # compile_time_ls_colours
 
+![LS_COLORS HashMap Test Output](./colour_output.png)
+
+
+
 Temporary crate for file extension colour lookups using LS_COLORS format.
 
 The main idea is a compile time hash map (we can't use std hashmap due to complicated reasons)
