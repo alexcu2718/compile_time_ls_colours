@@ -7,7 +7,7 @@ mod test;
 /// Falls back to `or_alternative` if the extension is not found in the colour map.
 #[inline]
 pub fn colour_path_or_alternative<'a>(extension: &'a [u8], or_alternative: &'a [u8]) -> &'a [u8] {
-    //has at least the lifetime of the extension (this cannot be static)
+    //has at least the lifetime of the extension (this cannot be static unless both inputs are static)
     LS_COLOURS_HASHMAP
         .get(extension)
         .map(|v| &**v)
@@ -17,7 +17,7 @@ pub fn colour_path_or_alternative<'a>(extension: &'a [u8], or_alternative: &'a [
 /// Returns the colour code for a given file extension if it exists in the colour map.
 /// Returns `None` if not found.
 #[inline]
-pub fn colour_path<'a>(extension: &'a [u8]) -> Option<&'static [u8]> {
+pub fn colour_path(extension: &[u8]) -> Option<&'static [u8]> {
     LS_COLOURS_HASHMAP.get(extension).map(|v| &**v)
 }
 
@@ -25,7 +25,7 @@ pub fn colour_path<'a>(extension: &'a [u8]) -> Option<&'static [u8]> {
 /// This is useful for cases where you want to ensure a reset colour code is used
 /// when the file type is not recognised.
 #[inline]
-pub fn colour_path_or_reset<'a>(extension: &'a [u8]) -> &'static [u8] {
+pub fn colour_path_or_reset(extension: &[u8]) -> &'static [u8] {
     LS_COLOURS_HASHMAP
         .get(extension)
         .map(|v| &**v)
@@ -51,17 +51,17 @@ pub fn colour_path_or_reset<'a>(extension: &'a [u8]) -> &'static [u8] {
 /// // Get fallback colour if extension is not in the map
 /// let unknown_colour: &'static [u8] = colour_path_or_reset(b"ext"); // defaults to NO_COLOUR if this extension is not recognised
 /// let probably_a_colour_maybe:&'static [u8]=colour_path_or_reset(b"sh");//look for shell file colouring or return nothing
-/// 
+///
 /// ///unfortunately due to coercion rules, putting raw literals in (either) hashmaps   is not ideal
 /// //we bypass it below
 /// let run_time_initial:&'static [u8]=LS_COLOURS_HASHMAP_RUNTIME.get(&b"py"[..]).map(|v| &**v).unwrap_or_else(|| NO_COLOUR);
 /// let i_love_this_language:&'static [u8]=b"js";
 /// let colour_of_love:&'static [u8]=LS_COLOURS_HASHMAP_RUNTIME.get(i_love_this_language).map(|v| &**v).unwrap_or_else(|| NO_COLOUR);
-/// 
+///
 /// let compile_time_hashmap_initial:&'static [u8]=LS_COLOURS_HASHMAP.get(&b"py"[..]).map(|v| &**v).unwrap_or_else(|| NO_COLOUR);
 /// let i_should_learn_this_language:&'static [u8]=b"cpp";
 /// let colour_of_grey_hair:&'static [u8]=LS_COLOURS_HASHMAP.get(i_should_learn_this_language).map(|v| &**v).unwrap_or_else(|| NO_COLOUR);
-/// 
+///
 /// let directory_colour: &'static [u8] = file_type_colour!(directory);
 /// let symlink_colour: &'static [u8] = file_type_colour!(symlink);
 /// ```

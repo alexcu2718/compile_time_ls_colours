@@ -1,6 +1,7 @@
 #![allow(clippy::all)]
 #![allow(warnings)]
 
+//this was my first time playing with compile time code generation, pretty neat!
 use ansic::ansi;
 use phf_codegen::Map;
 use std::collections::HashMap;
@@ -69,6 +70,8 @@ const COLOUR_SETGID_DEFAULT: &[u8] = ansi_bytes!(white   magenta); // sg
 const NO_COLOUR: &[u8] = ansi_bytes!(reset);
 
 ///A  trait on a file, basically allowing a lot less boiler plate in the main function (so the logic is more obvious)
+/// not commented at all because i wrote this in a day or so and ill do it when i feel like it.
+/// unfortunately will PROBABLY rely on cursed macros(or rather, I'd like trivial ways to initialise constant time lookups.)
 pub trait BuildWriter {
     fn write_constant_bytes(&mut self, name: &str, colour_bytes: &'static [u8]);
 
@@ -79,6 +82,8 @@ pub trait BuildWriter {
     fn write_code_comment(&mut self, paragraph_of_stuff: &str, reference: &str);
 
     fn write_escape_colour_code(&mut self, key: &str, bytes: &Vec<u8>);
+
+    fn write_escape_colour_code_round_bracketed(&mut self, key: &str, bytes: &Vec<u8>);
 }
 
 fn escape_bytes(byt: &Vec<u8>) -> String {
@@ -107,8 +112,14 @@ impl BuildWriter for File {
 
     fn write_escape_colour_code(&mut self, key: &str, bytes: &Vec<u8>) {
         let escaped_seq = escape_bytes(bytes);
-
+        //
         writeln!(self, "    b\"{}\" => b\"{}\",", key, escaped_seq).unwrap();
+    }
+
+    fn write_escape_colour_code_round_bracketed(&mut self, key: &str, bytes: &Vec<u8>) {
+        let escaped_seq = escape_bytes(bytes);
+        // Write the key-value pair as a tuple in the const array
+        writeln!(self, "    (b\"{}\", b\"{}\"),", key, escaped_seq).unwrap();
     }
 }
 
@@ -220,10 +231,8 @@ fn main() {
     f.write_code("pub const LS_COLOURS_DATA: &[(&'static [u8], &'static [u8])] = &[");
 
     for (key, escape_seq) in &colour_map {
-        let escaped_seq = escape_bytes(&escape_seq);
-        // Write the key-value pair as a tuple in the const array
-        writeln!(f, "    (b\"{}\", b\"{}\"),", key, escaped_seq).unwrap();//for some reason this breaks when i use my trait
-    }//this is obviously a best effort attempt at conciseness, i will work on this .... (it'll involve horrid macros)
+        f.write_escape_colour_code_round_bracketed(&key, &escape_seq)
+    }
 
     f.write_code("];\n");
 
@@ -231,6 +240,7 @@ fn main() {
     f.write_comment(" It is built once at runtime from the `LS_COLORS_CUSTOM` ");
     f.write_comment("the default (LS_COLOR) is used if the environment variable is not set. This is an optional feature to allow custom colours easily.");
     //basically i'm going to make this an option to use.
+    //so i can put the PHF feature under a flag!
     f.write_code("pub static LS_COLOURS_HASHMAP_RUNTIME: LazyLock<HashMap<&'static [u8], &'static [u8], BuildHasherDefault<DefaultHasher>>> = LazyLock::new(|| {");
     f.write_code("    let mut map = HashMap::with_capacity_and_hasher(LS_COLOURS_DATA.len(), BuildHasherDefault::new());");
     f.write_code("    for (key, value) in LS_COLOURS_DATA {");

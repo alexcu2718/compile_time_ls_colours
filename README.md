@@ -68,15 +68,14 @@ use compile_time_ls_colours::{COLOUR_SYMLINK_DEFAULT,COLOUR_GO};//ETCETCETC
 pub static LS_COLOURS_HASHMAP: Map<&'static [u8], &'static [u8]>
 
 
-// Provide the colour byte pattern for the extension and provide an alternative if it doesn't exist.
-pub fn colour_path_or_alternative<'a>(extension:&'a [u8],or_alternative:&'a [u8])->&'a [u8]{
-    LS_COLOURS_HASHMAP.get(extension).map(|v| &**v).unwrap_or_else(||or_alternative)
-}
+///This is a lazily initialised HashMap of file extensions to their corresponding ANSI colour codes.
+/// the intention for this is basically to avoid any dependencies, so i can hide phf behind a feature flag.
+pub static LS_COLOURS_HASHMAP_RUNTIME: LazyLock<HashMap<&'static [u8], &'static [u8], BuildHasherDefault<DefaultHasher>>>
 
 
 /// Returns the colour code for a given file extension if it exists in the color map.
 /// Returns `None` if not found.
-pub fn colour_path(extension:&'static [u8])->Option<&'static[u8]>{
+pub fn colour_path(extension:&[u8])->Option<&'static[u8]>{
     LS_COLOURS_HASHMAP.get(extension).map(|v| &**v)
 }
 
@@ -84,11 +83,13 @@ pub fn colour_path(extension:&'static [u8])->Option<&'static[u8]>{
 /// Like `colour_path_or_alternative`, but defaults to `NO_COLOUR` if extension is not recognized.
 /// This is useful for cases where you want to ensure a reset colour code is used
 /// when the file type is not recognized.
-pub fn colour_path_or_reset<'a>(extension: &'a  [u8]) -> &'static [u8] {
-    LS_COLOURS_HASHMAP.get(extension).map(|v| &**v).unwrap_or_else(|| NO_COLOUR)
+#[inline]
+pub fn colour_path_or_reset(extension: &[u8]) -> &'static [u8] {
+    LS_COLOURS_HASHMAP
+        .get(extension)
+        .map(|v| &**v)
+        .unwrap_or_else(|| NO_COLOUR)
 }
-
-
 /// BONUS FEATURE; YOU CAN VERIFY THE BACKUPS EXIST NOW BECAUSE THEY EXIST AS IMPORTS.
 /// #########################################################################################################################
 /// #                                                                                                                       #
