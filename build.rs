@@ -2,7 +2,6 @@
 #![allow(warnings)]
 
 //this was my first time playing with compile time code generation, pretty neat!
-use ansic::ansi;
 use phf_codegen::Map;
 use std::collections::HashMap;
 use std::env;
@@ -13,10 +12,17 @@ use std::thread;
 
 use std::io::BufWriter;
 macro_rules! ansi_bytes {
-    ($($t:tt)*) => {
-        ansi!($($t)*).as_bytes()
+    (rgb($r:expr, $g:expr, $b:expr)) => {
+        concat!(
+            "\x1b[38;2;",
+            $r, ";",
+            $g, ";",
+            $b,
+            "m"
+        ).as_bytes()
     };
 }
+
 
 const COLOUR_RS: &[u8] = ansi_bytes!(rgb(130, 200, 0));
 const COLOUR_PY: &[u8] = ansi_bytes!(rgb(0, 200, 200));
@@ -55,19 +61,20 @@ const COLOUR_XLS: &[u8] = ansi_bytes!(rgb(64, 128, 64));
 const COLOUR_XLSX: &[u8] = ansi_bytes!(rgb(64, 128, 64));
 const COLOUR_SQL: &[u8] = ansi_bytes!(rgb(100, 100, 100));
 
-const COLOUR_SYMLINK_DEFAULT: &[u8] = ansi_bytes!(cyan  bold); // ln
-const COLOUR_DIRECTORY_DEFAULT: &[u8] = ansi_bytes!(blue bold); //di
-const COLOUR_SOCKET_DEFAULT: &[u8] = ansi_bytes!(magenta bold); //so
-const COLOUR_PIPE_DEFAULT: &[u8] = ansi_bytes!(yellow bold); //pi
-const COLOUR_BLOCK_DEVICE_DEFAULT: &[u8] = ansi_bytes!(red bold); //bd
-const COLOUR_CHARACTER_DEVICE_DEFAULT: &[u8] = ansi_bytes!(green bold); //  cd
-const COLOUR_EXECUTABLE_DEFAULT: &[u8] = ansi_bytes!(green bold); //    ex
-const COLOUR_STICKY_DEFAULT: &[u8] = ansi_bytes!(white   blue); // st
-const COLOUR_OTHER_WRITABLE_DEFAULT: &[u8] = ansi_bytes!(blue    green); // ow
-const COLOUR_ORPHAN_SYMLINK_DEFAULT: &[u8] = ansi_bytes!(red bold); // or
-const COLOUR_SETUID_DEFAULT: &[u8] = ansi_bytes!(white   red); // su 
-const COLOUR_SETGID_DEFAULT: &[u8] = ansi_bytes!(white   magenta); // sg 
-const NO_COLOUR: &[u8] = ansi_bytes!(reset);
+//pain to do.
+const COLOUR_SYMLINK_DEFAULT: &[u8] = b"\x1b[36;1m"; // ln - cyan bold 
+const COLOUR_DIRECTORY_DEFAULT: &[u8] = b"\x1b[34;1m"; //di - blue bold
+const COLOUR_SOCKET_DEFAULT: &[u8] = b"\x1b[35;1m"; //so - magenta bold
+const COLOUR_PIPE_DEFAULT: &[u8] = b"\x1b[33;1m"; //pi - yellow bold
+const COLOUR_BLOCK_DEVICE_DEFAULT: &[u8] = b"\x1b[31;1m"; //bd - red bold
+const COLOUR_CHARACTER_DEVICE_DEFAULT: &[u8] = b"\x1b[32;1m"; //cd - green bold
+const COLOUR_EXECUTABLE_DEFAULT: &[u8] = b"\x1b[32;1m"; //ex - green bold
+const COLOUR_STICKY_DEFAULT: &[u8] = b"\x1b[37;44m"; // st - white on blue
+const COLOUR_OTHER_WRITABLE_DEFAULT: &[u8] = b"\x1b[34;42m"; // ow - blue on green
+const COLOUR_ORPHAN_SYMLINK_DEFAULT: &[u8] = b"\x1b[31;1m"; // or - red bold
+const COLOUR_SETUID_DEFAULT: &[u8] = b"\x1b[37;41m"; // su - white on red
+const COLOUR_SETGID_DEFAULT: &[u8] = b"\x1b[37;45m"; // sg - white on magenta
+const NO_COLOUR: &[u8] = b"\x1b[0m"; // reset
 
 ///A  trait on a file, basically allowing a lot less boiler plate in the main function (so the logic is more obvious)
 /// not commented at all because i wrote this in a day or so and ill do it when i feel like it.

@@ -7,10 +7,9 @@ license = "MIT"
 keywords=["filesystem","colors","hashmap","colours"]
 repository = "https://github.com/alexcu2718/compile_time_ls_colours"
 [build-dependencies]
-ansic = "0.1.7"
-phf_codegen = "0.12.1"
+phf_codegen = "0.13.1"
 
 
 [dependencies]
-phf = { version = "0.12.1", features = ["macros", "phf_macros"] }
+phf = { version = "0.13.1", features = ["macros", "phf_macros"] }
 
