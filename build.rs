@@ -1,7 +1,8 @@
 #![allow(clippy::all)]
 #![allow(warnings)]
 
-//this was my first time playing with compile time code generation, pretty neat!
+
+#[cfg(feature = "phf")]
 use phf_codegen::Map;
 use std::collections::HashMap;
 use std::env;
@@ -13,16 +14,9 @@ use std::thread;
 use std::io::BufWriter;
 macro_rules! ansi_bytes {
     (rgb($r:expr, $g:expr, $b:expr)) => {
-        concat!(
-            "\x1b[38;2;",
-            $r, ";",
-            $g, ";",
-            $b,
-            "m"
-        ).as_bytes()
+        concat!("\x1b[38;2;", $r, ";", $g, ";", $b, "m").as_bytes()
     };
 }
-
 
 const COLOUR_RS: &[u8] = ansi_bytes!(rgb(130, 200, 0));
 const COLOUR_PY: &[u8] = ansi_bytes!(rgb(0, 200, 200));
@@ -76,11 +70,9 @@ const COLOUR_SETUID_DEFAULT: &[u8] = b"\x1b[37;41m"; // su - white on red
 const COLOUR_SETGID_DEFAULT: &[u8] = b"\x1b[37;45m"; // sg - white on magenta
 const NO_COLOUR: &[u8] = b"\x1b[0m"; // reset
 
-///A  trait on a file, basically allowing a lot less boiler plate in the main function (so the logic is more obvious)
-/// not commented at all because i wrote this in a day or so and ill do it when i feel like it.
+/// A  trait on a file, basically allowing a lot less boiler plate in the main function (so the logic is more obvious)
 /// unfortunately will PROBABLY rely on cursed macros(or rather, I'd like trivial ways to initialise constant time lookups.)
-/// this code is not at all generalisable and is unfortunately shoehorned to fit the usecase
-/// but then again, i'm going to just think on the idly until some `elegant` idea presents itself (wishful init)
+/// this code is not at all generalisable and is unfortunately shoehorned to fit the usecase (do not try to use this code as an example, it's hacky!)
 pub trait BuildWriter {
     fn write_bytes(&mut self, name: &str, colour_bytes: &'static [u8]);
 
@@ -127,7 +119,7 @@ impl BuildWriter for File {
 
     fn write_escape_colour_code_round_bracketed(&mut self, key: &str, bytes: &Vec<u8>) {
         let escaped_seq = escape_bytes(bytes);
-        // Write the key-value pair as a tuple in the const array
+        // Write the key-value pair as a tuple in the array
         writeln!(self, "    (b\"{}\", b\"{}\"),", key, escaped_seq).unwrap();
     }
 }
@@ -209,54 +201,47 @@ fn main() {
     );
     f.write_bytes("COLOUR_SETUID_DEFAULT", COLOUR_SETUID_DEFAULT);
     f.write_bytes("COLOUR_SETGID_DEFAULT", COLOUR_SETGID_DEFAULT);
-    f.write_code("use phf::phf_map;");
-    f.write_comment("This is a compile-time hash map of file extensions to their corresponding ANSI colour codes");
-    f.write_comment(" based on the `LS_COLORS` environment variable.\n");
-    f.write_comment("It provides colour coding for file types in terminal applications.");
-    f.write_comment("Keys are byte slices representing file extensions.");
-    f.write_comment(" Values are byte slices representing ANSI escape sequences.");
-    f.write_comment(" Generated at build time from the LS_COLORS environment variable.");
+    #[cfg(feature = "phf")]
+    {
+        f.write_code("use phf::phf_map;");
+        f.write_comment("Compile-time PHF map of file extensions to colour codes");
 
-    f.write_code(
-        "pub static LS_COLOURS_HASHMAP: phf::Map<&'static [u8], &'static [u8]> = phf_map! {",
-    );
+        f.write_code(
+            "pub static LS_COLOURS_HASHMAP: phf::Map<&'static [u8], &'static [u8]> = phf_map! {",
+        );
 
-    for (key, escape_seq) in &colour_map {
-        f.write_escape_colour_code(&key, &escape_seq)
+        for (key, escape_seq) in &colour_map {
+            f.write_escape_colour_code(&key, &escape_seq)
+        }
+
+        f.write_code("};");
     }
 
-    f.write_code("};");
+    #[cfg(not(feature = "phf"))]
+    {
+        f.write_code("use std::collections::HashMap;");
+        f.write_code("use std::hash::BuildHasherDefault;");
+        f.write_code("use std::hash::DefaultHasher;");
+        f.write_code("use std::sync::LazyLock;");
 
-    f.write_code("use std::collections::HashMap;");
-    f.write_code("use std::hash::BuildHasherDefault;");
-    f.write_code("use std::hash::DefaultHasher;");
-    f.write_code("use std::sync::LazyLock;");
-    f.write_comment("This is a compile-time generated array of file extensions and their corresponding ANSI colour codes");
-    f.write_comment("based on the `LS_COLORS` environment variable and default fallbacks.");
-    f.write_comment("It provides colour coding for file types in terminal applications.");
-    f.write_comment(" Keys are byte slices representing file extensions.");
-    f.write_comment("Values are byte slices representing ANSI escape sequences.");
-    f.write_comment("Generated at build time from the LS_COLORS environment variable.");
-    f.write_code("pub const LS_COLOURS_DATA: &[(&'static [u8], &'static [u8])] = &[");
+        f.write_comment("Runtime HashMap of file extensions to colour codes");
 
-    for (key, escape_seq) in &colour_map {
-        f.write_escape_colour_code_round_bracketed(&key, &escape_seq)
+        f.write_code("pub const LS_COLOURS_DATA: &[(&'static [u8], &'static [u8])] = &[");
+
+        for (key, escape_seq) in &colour_map {
+            f.write_escape_colour_code_round_bracketed(&key, &escape_seq)
+        }
+
+        f.write_code("];\n");
+
+        f.write_code("pub static LS_COLOURS_HASHMAP: LazyLock<HashMap<&'static [u8], &'static [u8], BuildHasherDefault<DefaultHasher>>> = LazyLock::new(|| {");
+        f.write_code("    let mut map = HashMap::with_capacity_and_hasher(LS_COLOURS_DATA.len(), BuildHasherDefault::new());");
+        f.write_code("    for (key, value) in LS_COLOURS_DATA {");
+        f.write_code("        map.insert(*key, *value);");
+        f.write_code("    }");
+        f.write_code("    map");
+        f.write_code("});");
     }
-
-    f.write_code("];\n");
-
-    f.write_comment("This is a lazily initialised HashMap of file extensions to their corresponding ANSI colour codes.");
-    f.write_comment(" It is built once at runtime from the `LS_COLORS_CUSTOM` ");
-    f.write_comment("the default (LS_COLOR) is used if the environment variable is not set. This is an optional feature to allow custom colours easily.");
-    //basically i'm going to make this an option to use.
-    //so i can put the PHF feature under a flag!
-    f.write_code("pub static LS_COLOURS_HASHMAP_RUNTIME: LazyLock<HashMap<&'static [u8], &'static [u8], BuildHasherDefault<DefaultHasher>>> = LazyLock::new(|| {");
-    f.write_code("    let mut map = HashMap::with_capacity_and_hasher(LS_COLOURS_DATA.len(), BuildHasherDefault::new());");
-    f.write_code("    for (key, value) in LS_COLOURS_DATA {");
-    f.write_code("        map.insert(*key, *value);");
-    f.write_code("    }");
-    f.write_code("    map");
-    f.write_code("});");
 }
 
 fn parse_ls_colours(ls_colours: &str) -> HashMap<String, Vec<u8>> {

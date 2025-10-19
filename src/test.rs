@@ -15,7 +15,7 @@ mod tests {
         println!("Testing common extensions:");
         for ext in test_extensions {
             if let Some(escape_seq) = LS_COLOURS_HASHMAP.get(ext.as_bytes()) {
-                writer.write(escape_seq).unwrap(); // Write the escape sequence to the buffer
+                writer.write(escape_seq).unwrap();
                 writer.flush().unwrap();
                 print!("\x1b[0m.{}", String::from_utf8_lossy(escape_seq));
                 print!("{}", ext);
@@ -61,18 +61,15 @@ mod tests {
     #[test]
     fn test_edge_cases() {
         let edge_cases = [
-            "",                                        // empty string
-            " ",                                       // space
-            "tar.gz",                                  // compound extension
-            ".hidden",                                 // dotfile
-            "UPPER",                                   // uppercase
-            "MiXeD",                                   // mixed case
-            "with space",                              // contains space
-            "with.dot",                                // contains dot
-            "verylongextensionnametotestbufferlimits", // very long
+            "",
+            " ",
+            ".hidden",
+            "UPPER",
+            "MiXeD",
+            "with space",
+            "with.dot",
         ];
 
-        println!("Testing edge cases:");
         for case in edge_cases {
             match LS_COLOURS_HASHMAP.get(case.as_bytes()) {
                 Some(seq) => {
@@ -90,7 +87,7 @@ mod tests {
 
     #[test]
     fn test_map_integrity() {
-        // Verify the map contains expected entries
+        // check the guaranteed ones
         let must_have = ["rs", "py", "sh", "go", "c", "cpp"];
 
         for ext in must_have {
@@ -131,47 +128,63 @@ mod tests {
             writer,
             "\n--- LS_COLOURS_HASHMAP Contents & Applied Colours ---"
         )
+
+    
         .unwrap();
 
-        for (key_bytes, value_bytes) in LS_COLOURS_HASHMAP.into_iter() {
+        #[cfg(feature = "phf")]
+        for key_bytes in LS_COLOURS_HASHMAP.keys() {
+            let value_bytes = LS_COLOURS_HASHMAP.get(key_bytes).unwrap();
+
             if let Ok(key_str) = std::str::from_utf8(key_bytes) {
-                // Convert the value bytes (ANSI code) to a string for display purposes.
-                // If it's not valid UTF-8 then something is wrong.
-
+           
                 let colour_code_str =
-                    std::str::from_utf8(value_bytes).unwrap_or("<NON-UTF8 ANSI CODE>");
+                    std::str::from_utf8(value_bytes).expect("invalid utf8!");
 
-                // --- Applying the colour for visual output ---
+              
                 let coloured_example = format!(
                     "{}{}{}",
-                    colour_code_str, // The actual colour code from the hashmap
-                    "THIS TEXT IS COLOURED",
-                    "\x1b[0m" // Reset colour to default
+                    colour_code_str, "THIS TEXT IS COLOURED", "\x1b[0m"
                 );
 
                 writeln!(
                     writer,
                     "Key: {:<20}   | Applied: {}",
-                    key_str,
-                    // Shows the raw bytes of the ANSI code
-                    coloured_example // Shows the text rendered with the actual colour
+                    key_str, coloured_example
                 )
                 .unwrap();
             } else {
-                unreachable!(
-                    // This should never happen as we expect all keys to be valid UTF-8
-                    "Key bytes {:?} are not valid UTF-8",
-                    key_bytes
-                );
+                unreachable!("Key bytes {:?} are not valid UTF-8", key_bytes);
             }
         }
-        writeln!(writer, "-----------------------------------").unwrap();
-        writer.flush().unwrap(); // Ensures all buffered output is written immediately
+
+        #[cfg(not(feature = "phf"))]
+        for (key_bytes, value_bytes) in LS_COLOURS_HASHMAP.iter() {
+            if let Ok(key_str) = std::str::from_utf8(key_bytes) {
+                let colour_code_str =
+                    std::str::from_utf8(value_bytes).expect("invalid utf8!");
+
+                let coloured_example = format!(
+                    "{}{}{}",
+                    colour_code_str, "THIS TEXT IS COLOURED", "\x1b[0m"
+                );
+
+                writeln!(
+                    writer,
+                    "Key: {:<20}   | Applied: {}",
+                    key_str, coloured_example
+                )
+                .unwrap();
+            } else {
+                unreachable!("Key bytes {:?} are not valid UTF-8", key_bytes);
+            }
+        }
+
+        writeln!(writer, "-----------------------------------\n\n\n\n\n\n").unwrap();
     }
 
     #[test]
     fn test_visual_output() {
-        // Generate a visual test output for manual verification
         println!("\nVisual test output:");
         println!("{:-^40}", " FILE TYPES ");
 

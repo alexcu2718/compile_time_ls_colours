@@ -1,5 +1,6 @@
 // Include the generated LS_COLORS_HASHMAP from the build script output directory.
 include!(concat!(env!("OUT_DIR"), "/ls_colours.rs"));
+
 #[cfg(test)]
 mod test;
 
@@ -40,7 +41,7 @@ pub fn colour_path_or_reset(extension: &[u8]) -> &'static [u8] {
 /// # Usage
 ///
 /// ```rust
-/// use compile_time_ls_colours::{file_type_colour,LS_COLOURS_HASHMAP, NO_COLOUR,LS_COLOURS_HASHMAP_RUNTIME,colour_path_or_reset};
+/// use compile_time_ls_colours::{file_type_colour,LS_COLOURS_HASHMAP,colour_path_or_reset,NO_COLOUR};
 ///
 /// // Get colour for a symlink
 /// let symlink_colour: &[u8] = file_type_colour!(symlink);
@@ -54,9 +55,9 @@ pub fn colour_path_or_reset(extension: &[u8]) -> &'static [u8] {
 ///
 /// ///unfortunately due to coercion rules, putting raw literals in (either) hashmaps   is not ideal
 /// //we bypass it below
-/// let run_time_initial:&'static [u8]=LS_COLOURS_HASHMAP_RUNTIME.get(b"py".as_ref()).map(|v| &**v).unwrap_or_else(|| NO_COLOUR);
+/// let run_time_initial:&'static [u8]=LS_COLOURS_HASHMAP.get(b"py".as_ref()).map(|v| &**v).unwrap_or_else(|| NO_COLOUR);
 /// let i_love_this_language:&'static [u8]=b"js";
-/// let colour_of_love:&'static [u8]=LS_COLOURS_HASHMAP_RUNTIME.get(i_love_this_language).map(|v| &**v).unwrap_or_else(|| NO_COLOUR);
+/// let colour_of_love:&'static [u8]=LS_COLOURS_HASHMAP.get(i_love_this_language).map(|v| &**v).unwrap_or_else(|| NO_COLOUR);
 ///
 /// let compile_time_hashmap_initial:&'static [u8]=LS_COLOURS_HASHMAP.get(b"py".as_ref()).map(|v| &**v).unwrap_or_else(|| NO_COLOUR);
 /// let i_should_learn_this_language:&'static [u8]=b"cpp";
